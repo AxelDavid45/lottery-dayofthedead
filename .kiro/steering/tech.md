@@ -8,11 +8,12 @@
 ## Frontend
 - **React** with TypeScript for type safety
 - **Vite** as build tool and dev server
+- **Tailwind CSS** for styling and responsive design
 - **Socket.IO Client** for real-time communication
-- **Responsive design** with mobile-first approach
+- **Mobile-first responsive design**
 
 ## Backend
-- **Node.js** with Express server
+- **Node.js** with Fastify server
 - **Socket.IO** for WebSocket connections
 - **UUID** for unique room code generation
 - **In-memory storage** (no database required)
@@ -34,6 +35,8 @@ npm run preview     # Preview production build
 ```
 
 ## Key Libraries
-- `express ^4.18.2` - Web server framework
+- `fastify ^4.24.3` - Fast and efficient web server framework
+- `@fastify/websocket ^8.3.1` - WebSocket support for Fastify
 - `socket.io ^4.7.2` - Real-time bidirectional communication
 - `uuid ^9.0.0` - Generate unique room identifiers
+- `tailwindcss ^3.3.6` - Utility-first CSS framework

@@ -2,9 +2,10 @@
 
 - [ ] 1. Configurar estructura del proyecto y dependencias
   - Crear estructura de carpetas para monorepo (client/server)
-  - Configurar package.json para frontend (React + Vite + TypeScript)
-  - Configurar package.json para backend (Node.js + Express + Socket.IO)
+  - Configurar package.json para frontend (React + Vite + TypeScript + Tailwind CSS)
+  - Configurar package.json para backend (Node.js + Fastify + Socket.IO)
   - Instalar y configurar dependencias necesarias
+  - Configurar Tailwind CSS en el proyecto frontend
   - _Requisitos: 7.3, 7.4_
 
 - [ ] 2. Implementar modelos de datos y tipos TypeScript
@@ -15,7 +16,7 @@
   - _Requisitos: 8.1, 8.2_
 
 - [ ] 3. Desarrollar servidor backend básico
-  - Configurar servidor Express con Socket.IO
+  - Configurar servidor Fastify con Socket.IO
   - Implementar sistema de gestión de salas en memoria
   - Crear generador de códigos únicos de sala
   - Configurar manejo básico de conexiones WebSocket
@@ -65,10 +66,10 @@
   - Manejar estados de conexión y errores
   - _Requisitos: 1.4, 1.5, 4.5_
 
-- [ ] 10. Implementar interfaz temática del Día de Muertos
-  - Aplicar paleta de colores naranja (#ffb347) y morado (#7a1fa2)
-  - Configurar tipografía Inter o Atkinson
-  - Crear diseño minimalista y responsive
+- [ ] 10. Implementar interfaz temática del Día de Muertos con Tailwind CSS
+  - Aplicar paleta de colores naranja (#ffb347) y morado (#7a1fa2) usando clases de Tailwind
+  - Configurar tipografía Inter o Atkinson en Tailwind config
+  - Crear diseño minimalista y responsive con utilidades de Tailwind
   - Mostrar cartas con nombres y emojis apropiados
   - _Requisitos: 6.1, 6.2, 6.3, 6.4, 6.5_
 

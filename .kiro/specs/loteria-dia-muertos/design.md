@@ -11,11 +11,11 @@ La Lotería del Mictlán es un MVP de juego web multiplayer en tiempo real que i
 **Frontend:**
 - React 18 con TypeScript
 - Vite como bundler
+- Tailwind CSS para estilos y diseño responsivo
 - Socket.IO Client para WebSockets
-- CSS Modules o Tailwind CSS para estilos
 
 **Backend:**
-- Node.js con Express
+- Node.js con Fastify
 - Socket.IO Server para comunicación en tiempo real
 - UUID para generación de códigos de sala
 - Estado en memoria con estructuras Map
