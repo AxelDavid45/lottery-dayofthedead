@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { boardGenerator, generateBoardsForRoom } from './board-generator.js';
 import { DECK, GAME_CONSTANTS, getCardById } from '../../../shared/types/deck.js';
+import { validateVictory, processClaim, getBoardStats } from './victory-validator.js';
 
 // Room management utilities
 export class RoomManager {
@@ -307,10 +308,17 @@ export class RoomManager {
   endGame(roomCode, winnerId, io) {
     const room = this.rooms.get(roomCode);
     if (!room) {
+      console.error(`Cannot end game: room ${roomCode} not found`);
       return;
     }
 
-    // Stop card calling
+    // Prevent multiple winners (tie-breaking: first valid claim wins)
+    if (room.winnerId && room.winnerId !== winnerId) {
+      console.log(`Game already ended in room ${roomCode}, winner already declared: ${room.winnerId}`);
+      return;
+    }
+
+    // Stop card calling immediately
     this.stopCardCalling(roomCode);
 
     // Update room status
@@ -319,22 +327,40 @@ export class RoomManager {
 
     const winner = room.players.get(winnerId);
     if (winner) {
+      // Get final board stats for the winner
+      const stats = getBoardStats(winner, room.drawnCards);
+      
       // Broadcast winner to all players
       io.to(roomCode).emit("game:winner", {
         playerId: winnerId,
         playerName: winner.name,
-        roomState: this.serializeRoomState(room)
+        roomState: this.serializeRoomState(room),
+        stats: stats
       });
 
-      console.log(`Game ended in room ${roomCode}, winner: ${winner.name}`);
+      console.log(`🎉 Game ended in room ${roomCode}`);
+      console.log(`   Winner: ${winner.name} (${winnerId})`);
+      console.log(`   Cards called: ${room.drawIndex}/${room.deck.length}`);
+      console.log(`   Board stats:`, stats);
+    } else {
+      console.error(`Winner ${winnerId} not found in room ${roomCode}`);
     }
   }
 
   // Validate a player's claim for victory
   validateClaim(roomCode, playerId) {
     const room = this.rooms.get(roomCode);
-    if (!room || room.status !== "RUNNING") {
+    if (!room) {
+      return { isValid: false, reason: "ROOM_NOT_FOUND" };
+    }
+
+    if (room.status !== "RUNNING") {
       return { isValid: false, reason: "GAME_NOT_RUNNING" };
+    }
+
+    // Check if there's already a winner (tie-breaking: first claim wins)
+    if (room.winnerId) {
+      return { isValid: false, reason: "GAME_ALREADY_ENDED" };
     }
 
     const player = room.players.get(playerId);
@@ -342,19 +368,19 @@ export class RoomManager {
       return { isValid: false, reason: "PLAYER_NOT_FOUND" };
     }
 
-    // Check if all 16 cells are marked
-    const allMarked = player.marks.every(mark => mark === true);
-    if (!allMarked) {
-      return { isValid: false, reason: "BOARD_NOT_COMPLETE" };
+    // Use the comprehensive validation utility
+    const validation = validateVictory(player, room.drawnCards);
+    
+    if (!validation.isValid) {
+      console.log(`Invalid claim from ${player.name} in room ${roomCode}: ${validation.reason} - ${validation.details}`);
+      return { 
+        isValid: false, 
+        reason: validation.reason,
+        details: validation.details
+      };
     }
 
-    // Check if all marked cards have been called
-    for (let i = 0; i < player.board.length; i++) {
-      if (player.marks[i] && !room.drawnCards.has(player.board[i])) {
-        return { isValid: false, reason: "INVALID_MARKS" };
-      }
-    }
-
+    console.log(`Valid claim from ${player.name} in room ${roomCode}`);
     return { isValid: true };
   }
 
@@ -435,6 +461,17 @@ export class RoomManager {
     }
 
     return true;
+  }
+
+  // Get board statistics for a player
+  getPlayerBoardStats(roomCode, playerId) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return null;
+
+    const player = room.players.get(playerId);
+    if (!player) return null;
+
+    return getBoardStats(player, room.drawnCards);
   }
 
   // Get room statistics

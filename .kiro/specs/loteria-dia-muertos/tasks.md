@@ -37,14 +37,14 @@
   - Validar que los tableros usen solo cartas del mazo definido
   - _Requisitos: 3.1, 3.3, 8.3, 8.5_
 
-- [x] 6. Desarrollar mecánica de cantado de cartas
+- [ ] 6. Desarrollar mecánica de cantado de cartas
   - Implementar loop de cantado cada 4 segundos
   - Crear sistema de sincronización de cartas para todos los jugadores
   - Manejar barajado inicial y orden de cantado
   - Implementar historial de cartas cantadas
   - _Requisitos: 4.1, 4.2, 4.4, 4.5, 8.4_
 
-- [ ] 7. Implementar validación de victoria y manejo de empates
+- [x] 7. Implementar validación de victoria y manejo de empates
   - Crear función para validar tableros completos (16 casillas)
   - Verificar que cartas marcadas estén en conjunto de cartas cantadas
   - Implementar procesamiento de claims en orden de llegada

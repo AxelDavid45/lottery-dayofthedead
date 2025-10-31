@@ -312,11 +312,12 @@ export function setupSocketHandlers(io, roomManager) {
           return;
         }
 
-        // Check if there's already a winner
+        // Check if there's already a winner (tie-breaking: first claim wins)
         if (room.winnerId) {
+          const winner = room.players.get(room.winnerId);
           socket.emit("error", {
             code: "GAME_ALREADY_ENDED",
-            message: "Game has already ended",
+            message: `Game has already ended. Winner: ${winner ? winner.name : 'Unknown'}`,
           });
           return;
         }
@@ -330,16 +331,24 @@ export function setupSocketHandlers(io, roomManager) {
             case "GAME_NOT_RUNNING":
               errorMessage = "Game is not running";
               break;
+            case "GAME_ALREADY_ENDED":
+              errorMessage = "Game has already ended";
+              break;
             case "PLAYER_NOT_FOUND":
               errorMessage = "Player not found";
               break;
             case "BOARD_NOT_COMPLETE":
-              errorMessage = "Board is not complete";
+              errorMessage = validation.details || "Board is not complete - all 16 cells must be marked";
               break;
             case "INVALID_MARKS":
-              errorMessage = "Some marked cards have not been called";
+              errorMessage = validation.details || "Some marked cards have not been called yet";
               break;
+            default:
+              errorMessage = validation.details || "Invalid claim";
           }
+
+          const player = room.players.get(socket.id);
+          console.log(`❌ Invalid claim from ${player ? player.name : socket.id} in room ${roomCode}: ${errorMessage}`);
 
           socket.emit("error", {
             code: validation.reason,
@@ -348,10 +357,12 @@ export function setupSocketHandlers(io, roomManager) {
           return;
         }
 
-        // Claim is valid - end the game
+        // Claim is valid - end the game immediately
+        // This ensures first valid claim wins (tie-breaking)
+        const player = room.players.get(socket.id);
+        console.log(`✅ Valid claim from ${player ? player.name : socket.id} in room ${roomCode}`);
+        
         roomManager.endGame(roomCode, socket.id, io);
-
-        console.log(`Valid claim in room ${roomCode} by ${socket.id}`);
       } catch (error) {
         console.error("Error processing claim:", error);
         socket.emit("error", {
