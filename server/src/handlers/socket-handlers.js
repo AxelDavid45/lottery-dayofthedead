@@ -378,17 +378,28 @@ export function setupSocketHandlers(io, roomManager) {
         const player = room.players.get(socket.id);
         const playerName = player ? player.name : 'Unknown';
 
-        // Remove player from room
-        roomManager.removePlayer(room.code, socket.id);
+        // Mark player as disconnected instead of removing immediately
+        roomManager.markPlayerDisconnected(room.code, socket.id);
 
-        // If room still has players, send updated state to all remaining players
+        // Get updated room state
         const updatedRoom = roomManager.getRoom(room.code);
-        if (updatedRoom && updatedRoom.players.size > 0) {
+        if (updatedRoom) {
+          // Notify other players about the disconnection
+          io.to(room.code).emit("player:disconnected", {
+            playerId: socket.id,
+            playerName: playerName,
+          });
+
+          // Send updated room state
           io.to(room.code).emit("room:state", serializeRoomState(updatedRoom));
-          console.log(`${playerName} left room ${room.code}, ${updatedRoom.players.size} players remaining`);
-        } else {
-          console.log(`${playerName} left room ${room.code}, room is now empty`);
+          
+          console.log(`${playerName} disconnected from room ${room.code}, marked as disconnected`);
         }
+
+        // Schedule cleanup after 5 minutes if player doesn't reconnect
+        setTimeout(() => {
+          roomManager.cleanupDisconnectedPlayer(room.code, socket.id, io);
+        }, 5 * 60 * 1000); // 5 minutes
       }
     });
 
@@ -413,17 +424,22 @@ export function setupSocketHandlers(io, roomManager) {
           return;
         }
 
-        const room = roomManager.getRoom(roomCode.toUpperCase());
+        const room = roomManager.reconnectPlayer(
+          roomCode.toUpperCase(),
+          playerId,
+          socket.id
+        );
 
         if (!room) {
           socket.emit("error", {
-            code: "ROOM_NOT_FOUND",
-            message: "Room not found",
+            code: "RECONNECT_FAILED",
+            message: "Could not reconnect to room",
           });
           return;
         }
 
-        const player = room.players.get(playerId);
+        // After reconnection, player is now mapped to the new socket ID
+        const player = room.players.get(socket.id);
         if (!player) {
           socket.emit("error", {
             code: "PLAYER_NOT_FOUND",
@@ -432,15 +448,25 @@ export function setupSocketHandlers(io, roomManager) {
           return;
         }
 
-        // Update player connection status
-        player.isConnected = true;
-        socket.join(roomCode);
+        // Join socket to room for broadcasting
+        socket.join(roomCode.toUpperCase());
 
+        // Send reconnection confirmation with full room state
         socket.emit("room:reconnected", {
+          playerId: socket.id,
           roomState: serializeRoomState(room),
         });
 
-        console.log(`Player ${player.name} reconnected to room ${roomCode}`);
+        // Notify other players about the reconnection
+        socket.to(roomCode.toUpperCase()).emit("player:reconnected", {
+          playerId: socket.id,
+          playerName: player.name,
+        });
+
+        // Send updated room state to all players
+        io.to(roomCode.toUpperCase()).emit("room:state", serializeRoomState(room));
+
+        console.log(`Player ${player.name} reconnected to room ${roomCode.toUpperCase()}`);
       } catch (error) {
         console.error("Error reconnecting:", error);
         socket.emit("error", {

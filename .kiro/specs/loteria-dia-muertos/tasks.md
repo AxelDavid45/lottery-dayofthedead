@@ -81,7 +81,7 @@
   - Validar que solo se marquen cartas cantadas
   - _Requisitos: 3.5, 5.2_
 
-- [ ] 12. Manejar desconexiones y reconexiones
+- [x] 12. Manejar desconexiones y reconexiones
   - Implementar limpieza de jugadores desconectados
   - Mantener estado de partida cuando se va el host
   - Crear sistema de reconexión para jugadores

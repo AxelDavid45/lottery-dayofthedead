@@ -17,6 +17,7 @@ interface UseSocketReturn {
   markCell: (cellIndex: number) => void;
   claimVictory: () => void;
   clearError: () => void;
+  leaveRoom: () => void;
 }
 
 export const useSocket = (): UseSocketReturn => {
@@ -30,6 +31,19 @@ export const useSocket = (): UseSocketReturn => {
   // Use ref to store room code for reconnection
   const roomCodeRef = useRef<string>('');
   const playerIdRef = useRef<string>('');
+  const reconnectAttemptedRef = useRef<boolean>(false);
+
+  // Load persisted session data on mount
+  useEffect(() => {
+    const savedRoomCode = localStorage.getItem('loteria_room_code');
+    const savedPlayerId = localStorage.getItem('loteria_player_id');
+    
+    if (savedRoomCode && savedPlayerId) {
+      roomCodeRef.current = savedRoomCode;
+      playerIdRef.current = savedPlayerId;
+      console.log('Loaded session data:', { roomCode: savedRoomCode, playerId: savedPlayerId });
+    }
+  }, []);
 
   // Initialize socket connection
   useEffect(() => {
@@ -40,15 +54,22 @@ export const useSocket = (): UseSocketReturn => {
     socketInstance.on('connect', () => {
       console.log('Socket connected:', socketInstance.id);
       setConnectionStatus('connected');
-      setCurrentPlayerId(socketInstance.id || '');
-      playerIdRef.current = socketInstance.id || '';
       
-      // Attempt reconnection if we have room info
-      if (roomCodeRef.current && playerIdRef.current) {
+      // Attempt reconnection if we have saved session data
+      const savedRoomCode = roomCodeRef.current || localStorage.getItem('loteria_room_code');
+      const savedPlayerId = playerIdRef.current || localStorage.getItem('loteria_player_id');
+      
+      if (savedRoomCode && savedPlayerId && !reconnectAttemptedRef.current) {
+        console.log('Attempting to reconnect to room:', savedRoomCode);
+        reconnectAttemptedRef.current = true;
+        setConnectionStatus('reconnecting');
+        
         socketInstance.emit('room:reconnect', {
-          roomCode: roomCodeRef.current,
-          playerId: playerIdRef.current,
+          roomCode: savedRoomCode,
+          playerId: savedPlayerId,
         });
+      } else {
+        setCurrentPlayerId(socketInstance.id || '');
       }
     });
 
@@ -75,6 +96,7 @@ export const useSocket = (): UseSocketReturn => {
       console.log('Reconnected successfully');
       setConnectionStatus('connected');
       setError(null);
+      reconnectAttemptedRef.current = false;
     });
 
     socketInstance.io.on('reconnect_failed', () => {
@@ -90,21 +112,56 @@ export const useSocket = (): UseSocketReturn => {
     socketInstance.on('room:created', (data) => {
       console.log('Room created:', data.roomCode);
       roomCodeRef.current = data.roomCode;
+      
+      // Find current player in room state
+      const currentPlayer = data.roomState.players.find((p: any) => p.id === socketInstance.id);
+      if (currentPlayer) {
+        playerIdRef.current = currentPlayer.id;
+        setCurrentPlayerId(currentPlayer.id);
+        
+        // Persist session data
+        localStorage.setItem('loteria_room_code', data.roomCode);
+        localStorage.setItem('loteria_player_id', currentPlayer.id);
+      }
+      
       setRoomState(data.roomState);
       setError(null);
+      reconnectAttemptedRef.current = false;
     });
 
     socketInstance.on('room:joined', (data) => {
       console.log('Room joined');
       roomCodeRef.current = data.roomState.code;
+      
+      // Find current player in room state
+      const currentPlayer = data.roomState.players.find((p: any) => p.id === socketInstance.id);
+      if (currentPlayer) {
+        playerIdRef.current = currentPlayer.id;
+        setCurrentPlayerId(currentPlayer.id);
+        
+        // Persist session data
+        localStorage.setItem('loteria_room_code', data.roomState.code);
+        localStorage.setItem('loteria_player_id', currentPlayer.id);
+      }
+      
       setRoomState(data.roomState);
       setError(null);
+      reconnectAttemptedRef.current = false;
     });
 
     socketInstance.on('room:reconnected', (data) => {
-      console.log('Room reconnected');
+      console.log('Room reconnected successfully');
+      roomCodeRef.current = data.roomState.code;
+      playerIdRef.current = data.playerId;
+      setCurrentPlayerId(data.playerId);
       setRoomState(data.roomState);
+      setConnectionStatus('connected');
       setError(null);
+      reconnectAttemptedRef.current = false;
+      
+      // Update persisted session data
+      localStorage.setItem('loteria_room_code', data.roomState.code);
+      localStorage.setItem('loteria_player_id', data.playerId);
     });
 
     socketInstance.on('room:state', (data) => {
@@ -156,10 +213,33 @@ export const useSocket = (): UseSocketReturn => {
       console.log('👋 Player left:', data.id);
     });
 
+    socketInstance.on('player:disconnected', (data) => {
+      console.log('🔌 Player disconnected:', data.playerName);
+    });
+
+    socketInstance.on('player:reconnected', (data) => {
+      console.log('🔄 Player reconnected:', data.playerName);
+    });
+
+    socketInstance.on('player:removed', (data) => {
+      console.log('❌ Player removed after timeout:', data.playerName);
+    });
+
     // Error handler
     socketInstance.on('error', (data) => {
       console.error('Socket error:', data);
       setError(data);
+      
+      // If reconnection failed, clear session data
+      if (data.code === 'RECONNECT_FAILED' || data.code === 'ROOM_NOT_FOUND' || data.code === 'PLAYER_NOT_FOUND') {
+        console.log('Clearing session data due to reconnection failure');
+        localStorage.removeItem('loteria_room_code');
+        localStorage.removeItem('loteria_player_id');
+        roomCodeRef.current = '';
+        playerIdRef.current = '';
+        reconnectAttemptedRef.current = false;
+        setConnectionStatus('connected');
+      }
     });
 
     // Cleanup on unmount
@@ -176,6 +256,9 @@ export const useSocket = (): UseSocketReturn => {
       socketInstance.off('game:winner');
       socketInstance.off('player:joined');
       socketInstance.off('player:left');
+      socketInstance.off('player:disconnected');
+      socketInstance.off('player:reconnected');
+      socketInstance.off('player:removed');
       socketInstance.off('error');
       disconnectSocket();
     };
@@ -216,6 +299,19 @@ export const useSocket = (): UseSocketReturn => {
     setError(null);
   }, []);
 
+  const leaveRoom = useCallback(() => {
+    // Clear session data when intentionally leaving
+    localStorage.removeItem('loteria_room_code');
+    localStorage.removeItem('loteria_player_id');
+    roomCodeRef.current = '';
+    playerIdRef.current = '';
+    reconnectAttemptedRef.current = false;
+    setRoomState(null);
+    setCurrentCard(null);
+    setError(null);
+    console.log('Left room and cleared session data');
+  }, []);
+
   return {
     socket,
     connectionStatus,
@@ -229,5 +325,6 @@ export const useSocket = (): UseSocketReturn => {
     markCell,
     claimVictory,
     clearError,
+    leaveRoom,
   };
 };

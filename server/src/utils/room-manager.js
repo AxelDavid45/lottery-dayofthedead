@@ -117,7 +117,114 @@ export class RoomManager {
     return room;
   }
 
-  // Remove player from room
+  // Mark player as disconnected (but keep in room for potential reconnection)
+  markPlayerDisconnected(roomCode, playerId) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    const player = room.players.get(playerId);
+    if (!player) return;
+
+    player.isConnected = false;
+    console.log(`Player ${player.name} marked as disconnected in room ${roomCode}`);
+
+    // If host disconnected and game is waiting, reassign host to first connected player
+    if (player.isHost && room.status === 'WAITING') {
+      const connectedPlayers = Array.from(room.players.values()).filter(p => p.isConnected);
+      if (connectedPlayers.length > 0) {
+        const newHost = connectedPlayers[0];
+        player.isHost = false;
+        newHost.isHost = true;
+        room.hostId = newHost.id;
+        console.log(`Host reassigned to ${newHost.name} in room ${roomCode} (previous host disconnected)`);
+      }
+    }
+  }
+
+  // Reconnect a player to a room
+  reconnectPlayer(roomCode, oldPlayerId, newSocketId) {
+    const room = this.rooms.get(roomCode);
+    if (!room) {
+      console.log(`Reconnect failed: Room ${roomCode} not found`);
+      return null;
+    }
+
+    const player = room.players.get(oldPlayerId);
+    if (!player) {
+      console.log(`Reconnect failed: Player ${oldPlayerId} not found in room ${roomCode}`);
+      console.log(`Available players:`, Array.from(room.players.keys()));
+      return null;
+    }
+
+    console.log(`Reconnecting player ${player.name} from ${oldPlayerId} to ${newSocketId}`);
+
+    // Update player's socket ID and connection status
+    player.id = newSocketId;
+    player.isConnected = true;
+
+    // Update tracking maps
+    room.players.delete(oldPlayerId);
+    room.players.set(newSocketId, player);
+    this.playerRooms.delete(oldPlayerId);
+    this.playerRooms.set(newSocketId, roomCode);
+
+    // If this was the host, update host ID
+    if (player.isHost) {
+      room.hostId = newSocketId;
+      console.log(`Host ID updated to ${newSocketId}`);
+    }
+
+    console.log(`Player ${player.name} successfully reconnected with new socket ID: ${newSocketId}`);
+    return room;
+  }
+
+  // Clean up disconnected player after timeout
+  cleanupDisconnectedPlayer(roomCode, playerId, io) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    const player = room.players.get(playerId);
+    if (!player) return;
+
+    // Only remove if still disconnected
+    if (!player.isConnected) {
+      const playerName = player.name;
+      room.players.delete(playerId);
+      this.playerRooms.delete(playerId);
+
+      console.log(`Player ${playerName} removed from room ${roomCode} after timeout`);
+
+      // If room is empty, clean it up
+      if (room.players.size === 0) {
+        this.stopCardCalling(roomCode);
+        this.rooms.delete(roomCode);
+        console.log(`Room ${roomCode} deleted (empty after cleanup)`);
+        return;
+      }
+
+      // If host was removed, assign new host
+      if (player.isHost && room.players.size > 0) {
+        const connectedPlayers = Array.from(room.players.values()).filter(p => p.isConnected);
+        if (connectedPlayers.length > 0) {
+          const newHost = connectedPlayers[0];
+          newHost.isHost = true;
+          room.hostId = newHost.id;
+          console.log(`New host assigned: ${newHost.name} in room ${roomCode} (after cleanup)`);
+        }
+      }
+
+      // Notify remaining players
+      if (io) {
+        io.to(roomCode).emit("player:removed", {
+          playerId: playerId,
+          playerName: playerName,
+        });
+        io.to(roomCode).emit("room:state", this.serializeRoomState(room));
+      }
+    }
+  }
+
+  // Remove player from room (immediate removal, used for explicit leave)
   removePlayer(roomCode, playerId) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
@@ -140,10 +247,19 @@ export class RoomManager {
 
     // If host left, assign new host
     if (player.isHost && room.players.size > 0) {
-      const newHost = room.players.values().next().value;
-      newHost.isHost = true;
-      room.hostId = newHost.id;
-      console.log(`New host assigned: ${newHost.name} in room ${roomCode}`);
+      const connectedPlayers = Array.from(room.players.values()).filter(p => p.isConnected);
+      if (connectedPlayers.length > 0) {
+        const newHost = connectedPlayers[0];
+        newHost.isHost = true;
+        room.hostId = newHost.id;
+        console.log(`New host assigned: ${newHost.name} in room ${roomCode}`);
+      } else {
+        // If no connected players, assign to first player
+        const newHost = room.players.values().next().value;
+        newHost.isHost = true;
+        room.hostId = newHost.id;
+        console.log(`New host assigned: ${newHost.name} in room ${roomCode} (no connected players)`);
+      }
     }
   }
 

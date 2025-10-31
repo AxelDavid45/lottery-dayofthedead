@@ -35,7 +35,7 @@ export interface ServerToClientEvents {
   'room:joined': (data: { roomState: RoomStatePayload }) => void;
   
   // Reconexión exitosa
-  'room:reconnected': (data: { roomState: RoomStatePayload }) => void;
+  'room:reconnected': (data: { playerId: string; roomState: RoomStatePayload }) => void;
   
   // Estado actualizado de la sala
   'room:state': (data: RoomStatePayload) => void;
@@ -54,6 +54,15 @@ export interface ServerToClientEvents {
   
   // Jugador se fue
   'player:left': (data: { id: string }) => void;
+  
+  // Jugador se desconectó
+  'player:disconnected': (data: { playerId: string; playerName: string }) => void;
+  
+  // Jugador se reconectó
+  'player:reconnected': (data: { playerId: string; playerName: string }) => void;
+  
+  // Jugador removido después de timeout
+  'player:removed': (data: { playerId: string; playerName: string }) => void;
   
   // Errores
   'error': (data: GameError) => void;
