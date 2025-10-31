@@ -8,7 +8,7 @@
   - Configurar Tailwind CSS en el proyecto frontend
   - _Requisitos: 7.3, 7.4_
 
-- [ ] 2. Implementar modelos de datos y tipos TypeScript
+- [x] 2. Implementar modelos de datos y tipos TypeScript
   - Crear interfaces para RoomState, PlayerState y Card
   - Definir tipos para eventos de Socket.IO
   - Implementar el mazo de 24 cartas temáticas con nombres y emojis
