@@ -1,6 +1,6 @@
 # Plan de Implementación - Lotería del Mictlán
 
-- [ ] 1. Configurar estructura del proyecto y dependencias
+- [x] 1. Configurar estructura del proyecto y dependencias
   - Crear estructura de carpetas para monorepo (client/server)
   - Configurar package.json para frontend (React + Vite + TypeScript + Tailwind CSS)
   - Configurar package.json para backend (Node.js + Fastify + Socket.IO)

@@ -1,0 +1,27 @@
+{
+  "name": "loteria-server",
+  "version": "1.0.0",
+  "description": "Backend server for Lotería del Mictlán",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "fastify": "^4.24.3",
+    "@fastify/cors": "^8.4.2",
+    "@fastify/websocket": "^8.3.1",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "@types/node": "^20.10.4",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.2.2"
+  },
+  "keywords": ["fastify", "socket.io", "game-server"],
+  "author": "",
+  "license": "MIT"
+}
