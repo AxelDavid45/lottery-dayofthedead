@@ -40,11 +40,14 @@ export interface ServerToClientEvents {
   // Estado actualizado de la sala
   'room:state': (data: RoomStatePayload) => void;
   
+  // Juego iniciado
+  'game:started': (data: { roomState: RoomStatePayload }) => void;
+  
   // Nueva carta cantada
-  'game:card': (data: { card: Card; drawIndex: number }) => void;
+  'game:card': (data: { card: Card; drawIndex: number; totalCards: number; drawnCards: string[] }) => void;
   
   // Anuncio de ganador
-  'game:winner': (data: { playerId: string; playerName: string }) => void;
+  'game:winner': (data: { playerId: string; playerName: string; roomState: RoomStatePayload }) => void;
   
   // Jugador se unió
   'player:joined': (data: { id: string; name: string }) => void;

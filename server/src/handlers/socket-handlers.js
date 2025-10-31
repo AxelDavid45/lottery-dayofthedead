@@ -176,7 +176,7 @@ export function setupSocketHandlers(io, roomManager) {
 
         // Start the game and generate unique boards
         try {
-          const updatedRoom = roomManager.startGame(roomCode, socket.id);
+          const updatedRoom = roomManager.startGame(roomCode, socket.id, io);
 
           // Notify all players that game has started
           io.to(roomCode).emit("game:started", {
@@ -222,6 +222,141 @@ export function setupSocketHandlers(io, roomManager) {
         socket.emit("error", {
           code: "START_FAILED",
           message: "Failed to start game",
+        });
+      }
+    });
+
+    // Handle board marking
+    socket.on("board:mark", async (data) => {
+      try {
+        const { roomCode, cellIndex } = data;
+
+        if (!roomCode || cellIndex === undefined) {
+          socket.emit("error", {
+            code: "MISSING_DATA",
+            message: "Room code and cell index are required",
+          });
+          return;
+        }
+
+        if (typeof cellIndex !== "number" || cellIndex < 0 || cellIndex >= 16) {
+          socket.emit("error", {
+            code: "INVALID_CELL_INDEX",
+            message: "Cell index must be between 0 and 15",
+          });
+          return;
+        }
+
+        const room = roomManager.markCell(roomCode, socket.id, cellIndex);
+
+        // Send updated room state to all players
+        io.to(roomCode).emit("room:state", serializeRoomState(room));
+
+        console.log(`Cell ${cellIndex} marked in room ${roomCode}`);
+      } catch (error) {
+        console.error("Error marking cell:", error);
+        let errorCode = "MARK_FAILED";
+        let errorMessage = "Failed to mark cell";
+
+        switch (error.message) {
+          case "GAME_NOT_RUNNING":
+            errorCode = "GAME_NOT_RUNNING";
+            errorMessage = "Game is not running";
+            break;
+          case "PLAYER_NOT_FOUND":
+            errorCode = "PLAYER_NOT_FOUND";
+            errorMessage = "Player not found";
+            break;
+          case "INVALID_CELL_INDEX":
+            errorCode = "INVALID_CELL_INDEX";
+            errorMessage = "Invalid cell index";
+            break;
+          case "CARD_NOT_CALLED":
+            errorCode = "CARD_NOT_CALLED";
+            errorMessage = "Card has not been called yet";
+            break;
+        }
+
+        socket.emit("error", { code: errorCode, message: errorMessage });
+      }
+    });
+
+    // Handle victory claim
+    socket.on("game:claim", async (data) => {
+      try {
+        const { roomCode } = data;
+
+        if (!roomCode) {
+          socket.emit("error", {
+            code: "MISSING_DATA",
+            message: "Room code is required",
+          });
+          return;
+        }
+
+        const room = roomManager.getRoom(roomCode);
+
+        if (!room) {
+          socket.emit("error", {
+            code: "ROOM_NOT_FOUND",
+            message: "Room not found",
+          });
+          return;
+        }
+
+        if (room.status !== "RUNNING") {
+          socket.emit("error", {
+            code: "GAME_NOT_RUNNING",
+            message: "Game is not running",
+          });
+          return;
+        }
+
+        // Check if there's already a winner
+        if (room.winnerId) {
+          socket.emit("error", {
+            code: "GAME_ALREADY_ENDED",
+            message: "Game has already ended",
+          });
+          return;
+        }
+
+        // Validate the claim
+        const validation = roomManager.validateClaim(roomCode, socket.id);
+
+        if (!validation.isValid) {
+          let errorMessage = "Invalid claim";
+          switch (validation.reason) {
+            case "GAME_NOT_RUNNING":
+              errorMessage = "Game is not running";
+              break;
+            case "PLAYER_NOT_FOUND":
+              errorMessage = "Player not found";
+              break;
+            case "BOARD_NOT_COMPLETE":
+              errorMessage = "Board is not complete";
+              break;
+            case "INVALID_MARKS":
+              errorMessage = "Some marked cards have not been called";
+              break;
+          }
+
+          socket.emit("error", {
+            code: validation.reason,
+            message: errorMessage,
+          });
+          return;
+        }
+
+        // Claim is valid - end the game
+        roomManager.endGame(roomCode, socket.id, io);
+
+        console.log(`Valid claim in room ${roomCode} by ${socket.id}`);
+      } catch (error) {
+        console.error("Error processing claim:", error);
+        socket.emit("error", {
+          code: "CLAIM_FAILED",
+          message: "Failed to process claim",
         });
       }
     });

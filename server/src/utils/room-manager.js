@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { boardGenerator, generateBoardsForRoom } from './board-generator.js';
+import { DECK, GAME_CONSTANTS, getCardById } from '../../../shared/types/deck.js';
 
 // Room management utilities
 export class RoomManager {
@@ -130,9 +131,7 @@ export class RoomManager {
 
     // If room is empty, clean it up
     if (room.players.size === 0) {
-      if (room.gameInterval) {
-        clearInterval(room.gameInterval);
-      }
+      this.stopCardCalling(roomCode);
       this.rooms.delete(roomCode);
       console.log(`Room ${roomCode} deleted (empty)`);
       return;
@@ -165,9 +164,7 @@ export class RoomManager {
 
     for (const [roomCode, room] of this.rooms.entries()) {
       if (now - room.createdAt > TTL) {
-        if (room.gameInterval) {
-          clearInterval(room.gameInterval);
-        }
+        this.stopCardCalling(roomCode);
 
         // Remove all players from tracking
         for (const playerId of room.players.keys()) {
@@ -181,7 +178,7 @@ export class RoomManager {
   }
 
   // Start game and generate unique boards for all players
-  startGame(roomCode, hostId) {
+  startGame(roomCode, hostId, io) {
     const room = this.rooms.get(roomCode);
     
     if (!room) {
@@ -219,6 +216,9 @@ export class RoomManager {
       room.status = "RUNNING";
       room.winnerId = null;
 
+      // Start card calling loop
+      this.startCardCalling(roomCode, io);
+
       console.log(`Game started in room ${roomCode} with ${room.players.size} players`);
       console.log(`Boards generated: ${boards.length}, Deck shuffled: ${shuffledDeck.length} cards`);
       
@@ -227,6 +227,183 @@ export class RoomManager {
       console.error(`Failed to start game in room ${roomCode}:`, error);
       throw new Error("BOARD_GENERATION_FAILED");
     }
+  }
+
+  // Start the card calling loop for a room
+  startCardCalling(roomCode, io) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.status !== "RUNNING") {
+      return;
+    }
+
+    // Clear any existing interval
+    if (room.gameInterval) {
+      clearInterval(room.gameInterval);
+    }
+
+    // Start calling cards every 4 seconds
+    room.gameInterval = setInterval(() => {
+      this.callNextCard(roomCode, io);
+    }, GAME_CONSTANTS.CARD_INTERVAL);
+
+    // Call the first card immediately
+    this.callNextCard(roomCode, io);
+
+    console.log(`Card calling started for room ${roomCode}`);
+  }
+
+  // Call the next card in the deck
+  callNextCard(roomCode, io) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.status !== "RUNNING") {
+      return;
+    }
+
+    // Check if we've called all cards
+    if (room.drawIndex >= room.deck.length) {
+      console.log(`All cards called in room ${roomCode}, game continues until winner`);
+      return;
+    }
+
+    // Get the next card
+    const cardId = room.deck[room.drawIndex];
+    const card = getCardById(cardId);
+
+    if (!card) {
+      console.error(`Invalid card ID: ${cardId} in room ${roomCode}`);
+      return;
+    }
+
+    // Add to drawn cards and increment index
+    room.drawnCards.add(cardId);
+    room.drawIndex++;
+
+    // Broadcast the card to all players in the room
+    io.to(roomCode).emit("game:card", {
+      card: card,
+      drawIndex: room.drawIndex,
+      totalCards: room.deck.length,
+      drawnCards: Array.from(room.drawnCards)
+    });
+
+    console.log(`Card called in room ${roomCode}: ${card.name} (${room.drawIndex}/${room.deck.length})`);
+  }
+
+  // Stop card calling for a room
+  stopCardCalling(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room) {
+      return;
+    }
+
+    if (room.gameInterval) {
+      clearInterval(room.gameInterval);
+      room.gameInterval = null;
+      console.log(`Card calling stopped for room ${roomCode}`);
+    }
+  }
+
+  // End game and stop card calling
+  endGame(roomCode, winnerId, io) {
+    const room = this.rooms.get(roomCode);
+    if (!room) {
+      return;
+    }
+
+    // Stop card calling
+    this.stopCardCalling(roomCode);
+
+    // Update room status
+    room.status = "ENDED";
+    room.winnerId = winnerId;
+
+    const winner = room.players.get(winnerId);
+    if (winner) {
+      // Broadcast winner to all players
+      io.to(roomCode).emit("game:winner", {
+        playerId: winnerId,
+        playerName: winner.name,
+        roomState: this.serializeRoomState(room)
+      });
+
+      console.log(`Game ended in room ${roomCode}, winner: ${winner.name}`);
+    }
+  }
+
+  // Validate a player's claim for victory
+  validateClaim(roomCode, playerId) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.status !== "RUNNING") {
+      return { isValid: false, reason: "GAME_NOT_RUNNING" };
+    }
+
+    const player = room.players.get(playerId);
+    if (!player) {
+      return { isValid: false, reason: "PLAYER_NOT_FOUND" };
+    }
+
+    // Check if all 16 cells are marked
+    const allMarked = player.marks.every(mark => mark === true);
+    if (!allMarked) {
+      return { isValid: false, reason: "BOARD_NOT_COMPLETE" };
+    }
+
+    // Check if all marked cards have been called
+    for (let i = 0; i < player.board.length; i++) {
+      if (player.marks[i] && !room.drawnCards.has(player.board[i])) {
+        return { isValid: false, reason: "INVALID_MARKS" };
+      }
+    }
+
+    return { isValid: true };
+  }
+
+  // Handle player marking a cell on their board
+  markCell(roomCode, playerId, cellIndex) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.status !== "RUNNING") {
+      throw new Error("GAME_NOT_RUNNING");
+    }
+
+    const player = room.players.get(playerId);
+    if (!player) {
+      throw new Error("PLAYER_NOT_FOUND");
+    }
+
+    if (cellIndex < 0 || cellIndex >= 16) {
+      throw new Error("INVALID_CELL_INDEX");
+    }
+
+    const cardId = player.board[cellIndex];
+    
+    // Only allow marking if the card has been called
+    if (!room.drawnCards.has(cardId)) {
+      throw new Error("CARD_NOT_CALLED");
+    }
+
+    // Toggle the mark
+    player.marks[cellIndex] = !player.marks[cellIndex];
+
+    console.log(`Player ${player.name} ${player.marks[cellIndex] ? 'marked' : 'unmarked'} cell ${cellIndex} (${cardId}) in room ${roomCode}`);
+    
+    return room;
+  }
+
+  // Serialize room state for client (helper method)
+  serializeRoomState(room) {
+    if (!room) return null;
+
+    return {
+      id: room.id,
+      code: room.code,
+      status: room.status,
+      hostId: room.hostId,
+      drawIndex: room.drawIndex,
+      drawnCards: Array.from(room.drawnCards),
+      players: Array.from(room.players.values()),
+      winnerId: room.winnerId,
+      createdAt: room.createdAt,
+    };
   }
 
   // Validate that a player's board is valid

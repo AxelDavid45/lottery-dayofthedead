@@ -37,7 +37,7 @@
   - Validar que los tableros usen solo cartas del mazo definido
   - _Requisitos: 3.1, 3.3, 8.3, 8.5_
 
-- [ ] 6. Desarrollar mecánica de cantado de cartas
+- [x] 6. Desarrollar mecánica de cantado de cartas
   - Implementar loop de cantado cada 4 segundos
   - Crear sistema de sincronización de cartas para todos los jugadores
   - Manejar barajado inicial y orden de cantado
