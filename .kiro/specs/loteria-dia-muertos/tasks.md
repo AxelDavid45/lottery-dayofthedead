@@ -15,7 +15,7 @@
   - Crear tipos para estados de juego y errores
   - _Requisitos: 8.1, 8.2_
 
-- [ ] 3. Desarrollar servidor backend básico
+- [x] 3. Desarrollar servidor backend básico
   - Configurar servidor Fastify con Socket.IO
   - Implementar sistema de gestión de salas en memoria
   - Crear generador de códigos únicos de sala
