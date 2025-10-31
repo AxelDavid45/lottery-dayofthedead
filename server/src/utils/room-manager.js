@@ -358,15 +358,25 @@ export class RoomManager {
       clearInterval(room.gameInterval);
     }
 
-    // Start calling cards every 4 seconds
-    room.gameInterval = setInterval(() => {
+    console.log(`Card calling will start in 3 seconds for room ${roomCode}`);
+
+    // Wait 3 seconds before calling the first card to give players time to see their boards
+    setTimeout(() => {
+      const room = this.rooms.get(roomCode);
+      if (!room || room.status !== "RUNNING") {
+        return;
+      }
+
+      // Call the first card
       this.callNextCard(roomCode, io);
-    }, GAME_CONSTANTS.CARD_INTERVAL);
 
-    // Call the first card immediately
-    this.callNextCard(roomCode, io);
+      // Start calling cards every 4 seconds
+      room.gameInterval = setInterval(() => {
+        this.callNextCard(roomCode, io);
+      }, GAME_CONSTANTS.CARD_INTERVAL);
 
-    console.log(`Card calling started for room ${roomCode}`);
+      console.log(`Card calling started for room ${roomCode}`);
+    }, 3000);
   }
 
   // Call the next card in the deck

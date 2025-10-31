@@ -1,4 +1,5 @@
 import { DECK, GAME_CONSTANTS } from '../../../shared/types/deck.js';
+import crypto from 'crypto';
 
 /**
  * Board Generation System for Lotería del Mictlán
@@ -8,6 +9,8 @@ import { DECK, GAME_CONSTANTS } from '../../../shared/types/deck.js';
  * - 3.3: Use only cards from the defined 24-card deck
  * - 8.3: Shuffle deck at start of each game
  * - 8.5: Generate boards with random selection from the 24-card deck
+ * 
+ * Uses cryptographically secure random number generation for better randomness
  */
 
 export class BoardGenerator {
@@ -16,16 +19,25 @@ export class BoardGenerator {
   }
 
   /**
-   * Shuffle deck using Fisher-Yates algorithm for true randomness
+   * Generate a cryptographically secure random integer
+   * @param {number} max - Maximum value (exclusive)
+   * @returns {number} Random integer between 0 and max-1
+   */
+  secureRandomInt(max) {
+    return crypto.randomInt(0, max);
+  }
+
+  /**
+   * Shuffle deck using Fisher-Yates algorithm with cryptographically secure randomness
    * @returns {string[]} Array of shuffled card IDs
    */
   shuffleDeck() {
     const cardIds = DECK.map(card => card.id);
     const shuffled = [...cardIds];
     
-    // Fisher-Yates shuffle algorithm
+    // Fisher-Yates shuffle algorithm with crypto.randomInt for better randomness
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = this.secureRandomInt(i + 1);
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
@@ -70,22 +82,22 @@ export class BoardGenerator {
   }
 
   /**
-   * Select random indices without replacement
+   * Select random indices without replacement using Fisher-Yates
    * @param {number} totalCount - Total number of items to select from
    * @param {number} selectCount - Number of items to select
-   * @returns {number[]} Array of selected indices
+   * @returns {number[]} Array of selected indices (shuffled, not sorted)
    */
   selectRandomIndices(totalCount, selectCount) {
     const indices = Array.from({ length: totalCount }, (_, i) => i);
-    const selected = [];
     
+    // Fisher-Yates shuffle to select random indices
     for (let i = 0; i < selectCount; i++) {
-      const randomIndex = Math.floor(Math.random() * indices.length);
-      selected.push(indices[randomIndex]);
-      indices.splice(randomIndex, 1);
+      const j = i + this.secureRandomInt(totalCount - i);
+      [indices[i], indices[j]] = [indices[j], indices[i]];
     }
     
-    return selected.sort((a, b) => a - b); // Sort for consistency
+    // Return first selectCount indices (already randomized)
+    return indices.slice(0, selectCount);
   }
 
   /**
