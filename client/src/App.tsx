@@ -69,7 +69,7 @@ function App() {
 
       {/* Main Views */}
       {view === 'home' && (
-        <Home 
+        <Home
           onCreateRoom={createRoom}
           onJoinRoom={joinRoom}
         />

@@ -48,26 +48,26 @@ export const Game: React.FC<GameProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-dia-purple mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-dia-purple mb-2 font-atkinson">
             🎲 Lotería del Mictlán 💀
           </h1>
-          <p className="text-sm text-gray-600">
-            Sala: <span className="font-semibold">{roomState.code}</span>
+          <p className="text-sm text-gray-600 font-inter">
+            Sala: <span className="font-bold text-dia-purple">{roomState.code}</span>
           </p>
         </div>
 
         {/* Winner Announcement */}
         {isGameEnded && winner && (
-          <div className="mb-6 p-6 bg-gradient-to-r from-dia-orange to-dia-purple rounded-lg text-center">
-            <h2 className="text-3xl font-bold text-white mb-2">
+          <div className="mb-6 p-8 bg-gradient-to-r from-dia-orange via-orange-400 to-dia-purple rounded-2xl text-center shadow-2xl animate-pulse">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-3 font-atkinson drop-shadow-lg">
               🎉 ¡LOTERÍA! 🎉
             </h2>
-            <p className="text-xl text-white">
-              {winner.id === currentPlayerId ? '¡Ganaste!' : `${winner.name} ganó la partida`}
+            <p className="text-2xl md:text-3xl text-white font-bold font-inter">
+              {winner.id === currentPlayerId ? '🏆 ¡Ganaste! 🏆' : `🎊 ${winner.name} ganó la partida 🎊`}
             </p>
           </div>
         )}
@@ -86,7 +86,7 @@ export const Game: React.FC<GameProps> = ({
           <div className="mb-6 text-center">
             <button
               onClick={handleClaimClick}
-              className="bg-dia-orange hover:bg-orange-500 text-white font-bold text-2xl py-4 px-12 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+              className="bg-gradient-to-r from-dia-orange to-orange-500 hover:from-orange-500 hover:to-dia-orange text-white font-bold text-2xl md:text-3xl py-5 px-16 rounded-2xl shadow-2xl transition-all duration-200 transform hover:scale-110 active:scale-95 font-atkinson"
             >
               ¡LOTERÍA! 🎊
             </button>
@@ -95,24 +95,24 @@ export const Game: React.FC<GameProps> = ({
 
         {/* Claim Confirmation Modal */}
         {showClaimConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border-2 border-dia-purple">
+              <h3 className="text-2xl font-bold text-dia-purple mb-4 font-atkinson">
                 ¿Estás seguro?
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-700 mb-6 font-inter">
                 ¿Tienes todas las cartas marcadas correctamente?
               </p>
               <div className="flex space-x-3">
                 <button
                   onClick={handleCancelClaim}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded transition-colors"
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-xl transition-all duration-200 font-inter"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleConfirmClaim}
-                  className="flex-1 bg-dia-orange hover:bg-orange-500 text-white font-semibold py-2 px-4 rounded transition-colors"
+                  className="flex-1 bg-dia-orange hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-inter"
                 >
                   ¡Sí, Lotería!
                 </button>
@@ -133,25 +133,25 @@ export const Game: React.FC<GameProps> = ({
 
         {/* Players Status */}
         <div className="max-w-2xl mx-auto">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+          <h3 className="text-lg font-bold text-gray-800 mb-3 font-inter">
             Jugadores ({roomState.players.length})
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {roomState.players.map((player) => (
               <div
                 key={player.id}
-                className={`p-3 rounded-lg border ${
+                className={`p-3 rounded-xl border-2 transition-all duration-200 ${
                   player.id === currentPlayerId
-                    ? 'border-dia-purple bg-dia-purple bg-opacity-10'
-                    : 'border-gray-200 bg-gray-50'
+                    ? 'border-dia-purple bg-gradient-to-br from-purple-50 to-purple-100 shadow-md'
+                    : 'border-gray-200 bg-white'
                 }`}
               >
                 <div className="flex items-center space-x-2">
-                  <span className="text-lg">
+                  <span className="text-xl">
                     {player.isHost ? '👑' : '🎭'}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">
+                    <p className="text-sm font-bold text-gray-800 truncate font-inter">
                       {player.name}
                     </p>
                   </div>
@@ -164,20 +164,20 @@ export const Game: React.FC<GameProps> = ({
         {/* Drawn Cards History */}
         {roomState.drawnCards.length > 0 && (
           <div className="max-w-2xl mx-auto mt-6">
-            <details className="bg-gray-50 rounded-lg p-4">
-              <summary className="cursor-pointer font-semibold text-gray-800">
-                Cartas cantadas ({roomState.drawnCards.length})
+            <details className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-md">
+              <summary className="cursor-pointer font-bold text-gray-800 font-inter hover:text-dia-purple transition-colors">
+                📋 Cartas cantadas ({roomState.drawnCards.length})
               </summary>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {roomState.drawnCards.map((cardId, index) => {
                   const card = require('../../../shared/types/deck').getCardById(cardId);
                   return (
                     <span
                       key={index}
-                      className="inline-flex items-center space-x-1 bg-white px-2 py-1 rounded border border-gray-200 text-sm"
+                      className="inline-flex items-center space-x-1 bg-gradient-to-r from-orange-50 to-purple-50 px-3 py-2 rounded-lg border-2 border-gray-200 text-sm font-medium hover:border-dia-orange transition-colors"
                     >
-                      <span>{card?.emoji}</span>
-                      <span className="text-gray-700">{card?.name}</span>
+                      <span className="text-lg">{card?.emoji}</span>
+                      <span className="text-gray-700 font-inter">{card?.name}</span>
                     </span>
                   );
                 })}

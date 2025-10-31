@@ -92,16 +92,13 @@ export function setupSocketHandlers(io, roomManager) {
         // Join socket to room for broadcasting
         socket.join(roomCode.toUpperCase());
 
-        // Notify all players in room about new player
-        socket.to(roomCode.toUpperCase()).emit("player:joined", {
-          id: socket.id,
-          name: name.trim(),
-        });
-
         // Send room state to joining player
         socket.emit("room:joined", {
           roomState: serializeRoomState(room),
         });
+
+        // Broadcast updated room state to ALL players in the room (including the one who just joined)
+        io.to(roomCode.toUpperCase()).emit("room:state", serializeRoomState(room));
 
         console.log(`${name} joined room ${roomCode.toUpperCase()}`);
       } catch (error) {
@@ -379,21 +376,18 @@ export function setupSocketHandlers(io, roomManager) {
       const room = roomManager.getRoomByPlayer(socket.id);
       if (room) {
         const player = room.players.get(socket.id);
-        if (player) {
-          // Notify other players
-          socket.to(room.code).emit("player:left", {
-            id: socket.id,
-            name: player.name,
-          });
-        }
-
+        const playerName = player ? player.name : 'Unknown';
+        
         // Remove player from room
         roomManager.removePlayer(room.code, socket.id);
 
-        // If room still has players, send updated state
+        // If room still has players, send updated state to all remaining players
         const updatedRoom = roomManager.getRoom(room.code);
         if (updatedRoom && updatedRoom.players.size > 0) {
           io.to(room.code).emit("room:state", serializeRoomState(updatedRoom));
+          console.log(`${playerName} left room ${room.code}, ${updatedRoom.players.size} players remaining`);
+        } else {
+          console.log(`${playerName} left room ${room.code}, room is now empty`);
         }
       }
     });
