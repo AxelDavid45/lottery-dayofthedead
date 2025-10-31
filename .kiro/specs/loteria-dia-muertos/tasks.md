@@ -51,7 +51,7 @@
   - Manejar terminación de partida al declarar ganador
   - _Requisitos: 5.2, 5.3, 5.5, 9.1, 9.2, 9.5_
 
-- [-] 8. Desarrollar componentes React del frontend
+- [x] 8. Desarrollar componentes React del frontend
   - Crear componente Home con formularios de crear/unirse
   - Implementar componente Lobby con lista de jugadores
   - Desarrollar componente Game con tablero 4x4 clickeable
@@ -59,7 +59,7 @@
   - Implementar botón de "¡Lotería!" y manejo de claims
   - _Requisitos: 3.4, 3.5, 4.1, 5.1_
 
-- [ ] 9. Configurar comunicación WebSocket en el cliente
+- [x] 9. Configurar comunicación WebSocket en el cliente
   - Integrar Socket.IO client en React
   - Implementar manejo de eventos de sala y juego
   - Crear sistema de reconexión automática
