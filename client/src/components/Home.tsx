@@ -36,20 +36,24 @@ export const Home: React.FC<HomeProps> = ({ onCreateRoom, onJoinRoom }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full">
+      <main className="max-w-md w-full" role="main" aria-label="Página principal">
         {/* Header */}
-        <div className="text-center mb-10">
+        <header className="text-center mb-10">
           <h1 className="text-5xl md:text-6xl font-bold text-dia-purple mb-3 font-atkinson">
             🎲 Lotería del Mictlán 💀
           </h1>
           <p className="text-gray-600 text-lg font-inter">
             Juego de Lotería Mexicana
           </p>
-        </div>
+        </header>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 text-red-700 rounded-xl shadow-sm">
+          <div 
+            role="alert" 
+            aria-live="polite"
+            className="mb-6 p-4 bg-red-50 border-2 border-red-300 text-red-700 rounded-xl shadow-sm"
+          >
             <p className="font-medium">{error}</p>
           </div>
         )}
@@ -111,7 +115,7 @@ export const Home: React.FC<HomeProps> = ({ onCreateRoom, onJoinRoom }) => {
             🎭 Unirse a Sala
           </button>
         </form>
-      </div>
+      </main>
     </div>
   );
 };

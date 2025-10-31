@@ -79,23 +79,29 @@ export const Game: React.FC<GameProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50">
       {/* Winner Modal - Full Screen Overlay */}
       {isGameEnded && winner && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 px-4 backdrop-blur-md animate-fadeIn">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 px-4 backdrop-blur-md animate-fadeIn"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="winner-title"
+          aria-describedby="winner-description"
+        >
           <div className="bg-gradient-to-br from-dia-orange via-orange-400 to-dia-purple rounded-3xl p-8 md:p-12 max-w-2xl w-full shadow-2xl transform animate-scaleIn">
             <div className="text-center">
-              <div className="text-8xl mb-6 animate-bounce">
+              <div className="text-8xl mb-6 animate-bounce" role="img" aria-label={winner.id === currentPlayerId ? 'Trofeo de victoria' : 'Celebración'}>
                 {winner.id === currentPlayerId ? '🏆' : '🎊'}
               </div>
-              <h2 className="text-5xl md:text-7xl font-bold text-white mb-6 font-atkinson drop-shadow-2xl animate-pulse">
+              <h2 id="winner-title" className="text-5xl md:text-7xl font-bold text-white mb-6 font-atkinson drop-shadow-2xl animate-pulse">
                 ¡LOTERÍA!
               </h2>
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl p-6 mb-6">
-                <p className="text-3xl md:text-4xl text-white font-bold font-inter">
+                <p id="winner-description" className="text-3xl md:text-4xl text-white font-bold font-inter">
                   {winner.id === currentPlayerId
                     ? '¡Felicidades, ganaste!'
                     : `${winner.name} ganó la partida`}
                 </p>
               </div>
-              <div className="flex justify-center space-x-4 text-6xl animate-bounce mb-8">
+              <div className="flex justify-center space-x-4 text-6xl animate-bounce mb-8" role="img" aria-label="Decoración de celebración">
                 🎉 💀 🎊 🌼 🎺
               </div>
 
@@ -105,6 +111,8 @@ export const Game: React.FC<GameProps> = ({
                   <button
                     onClick={handleResetGame}
                     disabled={isResetting}
+                    aria-disabled={isResetting}
+                    aria-label="Jugar de nuevo"
                     className="w-full sm:w-auto bg-gradient-to-r from-dia-orange to-orange-500 hover:from-orange-500 hover:to-dia-orange text-white font-bold text-xl py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {isResetting ? '⏳ Reiniciando...' : '🎮 Jugar de Nuevo'}
@@ -113,6 +121,8 @@ export const Game: React.FC<GameProps> = ({
                 <button
                   onClick={handleLeaveRoom}
                   disabled={isLeaving}
+                  aria-disabled={isLeaving}
+                  aria-label="Salir de la sala"
                   className="w-full sm:w-auto bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 font-bold text-xl py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isLeaving ? '⏳ Saliendo...' : '🚪 Salir de la Sala'}

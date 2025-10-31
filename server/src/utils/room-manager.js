@@ -297,7 +297,7 @@ export class RoomManager {
   // Start game and generate unique boards for all players
   startGame(roomCode, hostId, io) {
     const room = this.rooms.get(roomCode);
-    
+
     if (!room) {
       throw new Error("ROOM_NOT_FOUND");
     }
@@ -317,7 +317,7 @@ export class RoomManager {
     try {
       // Generate unique boards for all players
       const { shuffledDeck, boards } = generateBoardsForRoom(room.players.size);
-      
+
       // Assign boards to players
       let boardIndex = 0;
       for (const player of room.players.values()) {
@@ -338,7 +338,7 @@ export class RoomManager {
 
       console.log(`Game started in room ${roomCode} with ${room.players.size} players`);
       console.log(`Boards generated: ${boards.length}, Deck shuffled: ${shuffledDeck.length} cards`);
-      
+
       return room;
     } catch (error) {
       console.error(`Failed to start game in room ${roomCode}:`, error);
@@ -455,7 +455,7 @@ export class RoomManager {
     if (winner) {
       // Get final board stats for the winner
       const stats = getBoardStats(winner, room.drawnCards);
-      
+
       // Broadcast winner to all players
       io.to(roomCode).emit("game:winner", {
         playerId: winnerId,
@@ -496,11 +496,11 @@ export class RoomManager {
 
     // Use the comprehensive validation utility
     const validation = validateVictory(player, room.drawnCards);
-    
+
     if (!validation.isValid) {
       console.log(`Invalid claim from ${player.name} in room ${roomCode}: ${validation.reason} - ${validation.details}`);
-      return { 
-        isValid: false, 
+      return {
+        isValid: false,
         reason: validation.reason,
         details: validation.details
       };
@@ -527,7 +527,7 @@ export class RoomManager {
     }
 
     const cardId = player.board[cellIndex];
-    
+
     // Only allow marking if the card has been called
     if (!room.drawnCards.has(cardId)) {
       throw new Error("CARD_NOT_CALLED");
@@ -537,7 +537,7 @@ export class RoomManager {
     player.marks[cellIndex] = !player.marks[cellIndex];
 
     console.log(`Player ${player.name} ${player.marks[cellIndex] ? 'marked' : 'unmarked'} cell ${cellIndex} (${cardId}) in room ${roomCode}`);
-    
+
     return room;
   }
 
@@ -575,7 +575,7 @@ export class RoomManager {
     if (!room) return false;
 
     const boards = Array.from(room.players.values()).map(player => player.board);
-    
+
     // Check each board against every other board
     for (let i = 0; i < boards.length; i++) {
       for (let j = i + 1; j < boards.length; j++) {
@@ -592,7 +592,7 @@ export class RoomManager {
   // Reset game to WAITING state with new boards (for "Play Again" functionality)
   resetGame(roomCode, hostId, io) {
     const room = this.rooms.get(roomCode);
-    
+
     if (!room) {
       throw new Error("ROOM_NOT_FOUND");
     }
@@ -615,7 +615,7 @@ export class RoomManager {
 
       // Generate new unique boards for all players
       const { shuffledDeck, boards } = generateBoardsForRoom(room.players.size);
-      
+
       // Assign new boards to players and reset marks
       let boardIndex = 0;
       for (const player of room.players.values()) {
@@ -626,7 +626,7 @@ export class RoomManager {
 
       console.log(`Game reset in room ${roomCode} by host ${hostId}`);
       console.log(`New boards generated for ${room.players.size} players`);
-      
+
       return room;
     } catch (error) {
       console.error(`Failed to reset game in room ${roomCode}:`, error);
