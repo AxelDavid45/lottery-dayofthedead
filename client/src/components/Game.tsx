@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { RoomStatePayload, Card } from '../../../shared/types';
+import { getCardById } from '../../../shared/types/deck';
 import { CurrentCard } from './CurrentCard';
 import { GameBoard } from './GameBoard';
 
@@ -25,6 +26,19 @@ export const Game: React.FC<GameProps> = ({
   const winner = roomState.winnerId 
     ? roomState.players.find(p => p.id === roomState.winnerId)
     : null;
+
+  // Debug logging
+  console.log('Game component render:', {
+    currentPlayerId,
+    currentPlayer: currentPlayer ? {
+      id: currentPlayer.id,
+      name: currentPlayer.name,
+      boardLength: currentPlayer.board?.length || 0,
+      marksLength: currentPlayer.marks?.length || 0
+    } : null,
+    roomStatus: roomState.status,
+    totalPlayers: roomState.players.length
+  });
 
   const handleClaimClick = () => {
     setShowClaimConfirm(true);
@@ -170,7 +184,7 @@ export const Game: React.FC<GameProps> = ({
               </summary>
               <div className="mt-4 flex flex-wrap gap-2">
                 {roomState.drawnCards.map((cardId, index) => {
-                  const card = require('../../../shared/types/deck').getCardById(cardId);
+                  const card = getCardById(cardId);
                   return (
                     <span
                       key={index}

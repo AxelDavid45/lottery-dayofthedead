@@ -118,7 +118,11 @@ export const useSocket = (): UseSocketReturn => {
 
     // Game event handlers
     socketInstance.on('game:started', (data) => {
-      console.log('Game started');
+      console.log('Game started', {
+        players: data.roomState.players.length,
+        status: data.roomState.status,
+        playersWithBoards: data.roomState.players.filter((p: any) => p.board && p.board.length > 0).length
+      });
       setRoomState(data.roomState);
       setError(null);
     });
