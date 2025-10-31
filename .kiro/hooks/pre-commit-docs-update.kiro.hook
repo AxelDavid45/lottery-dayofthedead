@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "name": "Pre-Commit Documentation Update",
+  "description": "Before making a commit, automatically check and update documentation to ensure it stays synchronized with code changes",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "server/src/**/*",
+      "client/src/**/*",
+      "shared/**/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the recent code changes and update all relevant documentation files (README.md, WEBSOCKET_INTEGRATION.md, CARD_CALLING_IMPLEMENTATION.md, VICTORY_VALIDATION.md, BOARD_MARKING_VERIFICATION.md, and any other .md files) to reflect the current state of the codebase. Ensure that:\n1. All new features are documented\n2. API changes are reflected in documentation\n3. Setup instructions are current\n4. Examples match the current implementation\n5. Architecture diagrams or descriptions are accurate\nAfter updating documentation, provide a summary of what was updated and confirm the documentation is ready for commit."
+  }
+}
