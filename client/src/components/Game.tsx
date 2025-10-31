@@ -167,9 +167,19 @@ export const Game: React.FC<GameProps> = ({
 
         {/* Players Status */}
         <div className="max-w-2xl mx-auto">
-          <h3 className="text-lg font-bold text-gray-800 mb-3 font-inter">
-            Jugadores ({roomState.players.length})
-          </h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-bold text-gray-800 font-inter">
+              Jugadores ({roomState.players.length})
+            </h3>
+            {/* Leave Room button always available */}
+            <button
+              onClick={handleLeaveRoom}
+              disabled={isLeaving}
+              className="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-all duration-200 font-inter disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLeaving ? '⏳ Saliendo...' : '🚪 Salir'}
+            </button>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {roomState.players.map((player) => (
               <div

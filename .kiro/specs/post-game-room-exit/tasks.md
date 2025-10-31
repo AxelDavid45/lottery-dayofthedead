@@ -55,7 +55,7 @@
     - Clean up listeners on unmount
     - _Requirements: 1.3, 2.7_
 
-- [x] 5. Update Game component UI
+- [ ] 5. Update Game component UI
   - [x] 5.1 Add post-game action buttons
     - Create action buttons container that displays when `roomState.status === 'ENDED'`
     - Add "Leave Room" button visible to all players
