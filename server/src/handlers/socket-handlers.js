@@ -174,14 +174,49 @@ export function setupSocketHandlers(io, roomManager) {
           return;
         }
 
-        // Game start logic will be implemented in later tasks
-        console.log(
-          `Game start requested for room ${roomCode} by host ${socket.id}`
-        );
-        socket.emit("error", {
-          code: "NOT_IMPLEMENTED",
-          message: "Game start will be implemented in next tasks",
-        });
+        // Start the game and generate unique boards
+        try {
+          const updatedRoom = roomManager.startGame(roomCode, socket.id);
+
+          // Notify all players that game has started
+          io.to(roomCode).emit("game:started", {
+            roomState: serializeRoomState(updatedRoom),
+          });
+
+          console.log(
+            `Game started in room ${roomCode} with ${updatedRoom.players.size} players`
+          );
+        } catch (startError) {
+          console.error("Error in startGame:", startError);
+          let errorCode = "START_FAILED";
+          let errorMessage = "Failed to start game";
+
+          switch (startError.message) {
+            case "ROOM_NOT_FOUND":
+              errorCode = "ROOM_NOT_FOUND";
+              errorMessage = "Room not found";
+              break;
+            case "NOT_HOST":
+              errorCode = "NOT_HOST";
+              errorMessage = "Only host can start the game";
+              break;
+            case "GAME_ALREADY_STARTED":
+              errorCode = "GAME_ALREADY_STARTED";
+              errorMessage = "Game is already running";
+              break;
+            case "INSUFFICIENT_PLAYERS":
+              errorCode = "NOT_ENOUGH_PLAYERS";
+              errorMessage = "Need at least 2 players to start";
+              break;
+            case "BOARD_GENERATION_FAILED":
+              errorCode = "BOARD_GENERATION_FAILED";
+              errorMessage = "Failed to generate unique boards";
+              break;
+          }
+
+          socket.emit("error", { code: errorCode, message: errorMessage });
+          return;
+        }
       } catch (error) {
         console.error("Error starting game:", error);
         socket.emit("error", {

@@ -30,7 +30,7 @@
   - Implementar asignación de permisos de host
   - _Requisitos: 1.1, 1.2, 2.2, 2.3_
 
-- [ ] 5. Crear sistema de generación de tableros únicos
+- [x] 5. Crear sistema de generación de tableros únicos
   - Implementar algoritmo de barajado del mazo
   - Crear función para generar tableros 4x4 únicos
   - Asegurar que cada jugador reciba cartas diferentes

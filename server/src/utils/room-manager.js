@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { boardGenerator, generateBoardsForRoom } from './board-generator.js';
 
 // Room management utilities
 export class RoomManager {
@@ -179,6 +180,86 @@ export class RoomManager {
     }
   }
 
+  // Start game and generate unique boards for all players
+  startGame(roomCode, hostId) {
+    const room = this.rooms.get(roomCode);
+    
+    if (!room) {
+      throw new Error("ROOM_NOT_FOUND");
+    }
+
+    if (room.hostId !== hostId) {
+      throw new Error("NOT_HOST");
+    }
+
+    if (room.status !== "WAITING") {
+      throw new Error("GAME_ALREADY_STARTED");
+    }
+
+    if (room.players.size < 2) {
+      throw new Error("INSUFFICIENT_PLAYERS");
+    }
+
+    try {
+      // Generate unique boards for all players
+      const { shuffledDeck, boards } = generateBoardsForRoom(room.players.size);
+      
+      // Assign boards to players
+      let boardIndex = 0;
+      for (const player of room.players.values()) {
+        player.board = boards[boardIndex];
+        player.marks = new Array(16).fill(false); // Reset marks
+        boardIndex++;
+      }
+
+      // Set up game state
+      room.deck = shuffledDeck;
+      room.drawIndex = 0;
+      room.drawnCards = new Set();
+      room.status = "RUNNING";
+      room.winnerId = null;
+
+      console.log(`Game started in room ${roomCode} with ${room.players.size} players`);
+      console.log(`Boards generated: ${boards.length}, Deck shuffled: ${shuffledDeck.length} cards`);
+      
+      return room;
+    } catch (error) {
+      console.error(`Failed to start game in room ${roomCode}:`, error);
+      throw new Error("BOARD_GENERATION_FAILED");
+    }
+  }
+
+  // Validate that a player's board is valid
+  validatePlayerBoard(roomCode, playerId) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return false;
+
+    const player = room.players.get(playerId);
+    if (!player) return false;
+
+    return boardGenerator.validateBoard(player.board);
+  }
+
+  // Check if all players have unique boards
+  validateAllBoardsUnique(roomCode) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return false;
+
+    const boards = Array.from(room.players.values()).map(player => player.board);
+    
+    // Check each board against every other board
+    for (let i = 0; i < boards.length; i++) {
+      for (let j = i + 1; j < boards.length; j++) {
+        if (!boardGenerator.areBoardsDifferent(boards[i], boards[j])) {
+          console.error(`Duplicate boards found in room ${roomCode}`);
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   // Get room statistics
   getStats() {
     return {
@@ -187,6 +268,7 @@ export class RoomManager {
       activeGames: Array.from(this.rooms.values()).filter(
         (room) => room.status === "RUNNING"
       ).length,
+      boardGeneratorStats: boardGenerator.getStats()
     };
   }
 }
