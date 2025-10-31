@@ -51,7 +51,7 @@
   - Manejar terminación de partida al declarar ganador
   - _Requisitos: 5.2, 5.3, 5.5, 9.1, 9.2, 9.5_
 
-- [ ] 8. Desarrollar componentes React del frontend
+- [-] 8. Desarrollar componentes React del frontend
   - Crear componente Home con formularios de crear/unirse
   - Implementar componente Lobby con lista de jugadores
   - Desarrollar componente Game con tablero 4x4 clickeable

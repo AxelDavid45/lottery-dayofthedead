@@ -1,6 +1,6 @@
 // Socket.IO event types and payloads
 
-import { Card, RoomState, GameError } from './game';
+import { Card, GameError } from './game';
 
 // Cliente → Servidor events
 export interface ClientToServerEvents {
