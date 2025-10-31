@@ -77,6 +77,7 @@ Una versión web multiplayer en tiempo real de la tradicional Lotería Mexicana,
 3. SI todas las 16 cartas marcadas están en el conjunto de cartas cantadas, ENTONCES EL Sistema_Loteria DEBERÁ declarar al jugador como ganador
 4. SI el claim no es válido, ENTONCES EL Sistema_Loteria DEBERÁ rechazar el intento sin penalización en el MVP
 5. EL Sistema_Loteria DEBERÁ aceptar solo el primer claim válido y notificar a todos los jugadores del ganador
+6. CUANDO el servidor emite el evento de ganador, EL Sistema_Loteria DEBERÁ mostrar inmediatamente un modal que interrumpa el juego y anuncie al ganador
 
 ### Requisito 6
 

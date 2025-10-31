@@ -57,7 +57,8 @@
   - Desarrollar componente Game con tablero 4x4 clickeable
   - Crear componente CurrentCard para mostrar carta cantada
   - Implementar botón de "¡Lotería!" y manejo de claims
-  - _Requisitos: 3.4, 3.5, 4.1, 5.1_
+  - Crear modal de anuncio de ganador que interrumpa el juego inmediatamente
+  - _Requisitos: 3.4, 3.5, 4.1, 5.1, 5.6_
 
 - [x] 9. Configurar comunicación WebSocket en el cliente
   - Integrar Socket.IO client en React
@@ -73,7 +74,7 @@
   - Mostrar cartas con nombres y emojis apropiados
   - _Requisitos: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 11. Integrar funcionalidad de marcado de tablero
+- [x] 11. Integrar funcionalidad de marcado de tablero
   - Implementar clicks en casillas del tablero 4x4
   - Crear indicadores visuales para cartas marcadas
   - Sincronizar estado de marcas con el servidor

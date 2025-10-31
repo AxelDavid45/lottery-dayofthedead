@@ -12,18 +12,18 @@ interface GameProps {
   onClaim: () => void;
 }
 
-export const Game: React.FC<GameProps> = ({ 
-  roomState, 
-  currentPlayerId, 
+export const Game: React.FC<GameProps> = ({
+  roomState,
+  currentPlayerId,
   currentCard,
   onMarkCell,
   onClaim
 }) => {
   const [showClaimConfirm, setShowClaimConfirm] = useState(false);
-  
+
   const currentPlayer = roomState.players.find(p => p.id === currentPlayerId);
   const isGameEnded = roomState.status === 'ENDED';
-  const winner = roomState.winnerId 
+  const winner = roomState.winnerId
     ? roomState.players.find(p => p.id === roomState.winnerId)
     : null;
 
@@ -63,6 +63,32 @@ export const Game: React.FC<GameProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50">
+      {/* Winner Modal - Full Screen Overlay */}
+      {isGameEnded && winner && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 px-4 backdrop-blur-md animate-fadeIn">
+          <div className="bg-gradient-to-br from-dia-orange via-orange-400 to-dia-purple rounded-3xl p-12 max-w-2xl w-full shadow-2xl transform animate-scaleIn">
+            <div className="text-center">
+              <div className="text-8xl mb-6 animate-bounce">
+                {winner.id === currentPlayerId ? '🏆' : '🎊'}
+              </div>
+              <h2 className="text-5xl md:text-7xl font-bold text-white mb-6 font-atkinson drop-shadow-2xl animate-pulse">
+                ¡LOTERÍA!
+              </h2>
+              <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl p-6 mb-6">
+                <p className="text-3xl md:text-4xl text-white font-bold font-inter">
+                  {winner.id === currentPlayerId 
+                    ? '¡Felicidades, ganaste!' 
+                    : `${winner.name} ganó la partida`}
+                </p>
+              </div>
+              <div className="flex justify-center space-x-4 text-6xl animate-bounce">
+                🎉 💀 🎊 🌼 🎺
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="text-center mb-6">
@@ -74,21 +100,9 @@ export const Game: React.FC<GameProps> = ({
           </p>
         </div>
 
-        {/* Winner Announcement */}
-        {isGameEnded && winner && (
-          <div className="mb-6 p-8 bg-gradient-to-r from-dia-orange via-orange-400 to-dia-purple rounded-2xl text-center shadow-2xl animate-pulse">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-3 font-atkinson drop-shadow-lg">
-              🎉 ¡LOTERÍA! 🎉
-            </h2>
-            <p className="text-2xl md:text-3xl text-white font-bold font-inter">
-              {winner.id === currentPlayerId ? '🏆 ¡Ganaste! 🏆' : `🎊 ${winner.name} ganó la partida 🎊`}
-            </p>
-          </div>
-        )}
-
         {/* Current Card Display */}
         <div className="mb-6">
-          <CurrentCard 
+          <CurrentCard
             card={currentCard}
             drawIndex={roomState.drawIndex}
             totalCards={24}
@@ -154,11 +168,10 @@ export const Game: React.FC<GameProps> = ({
             {roomState.players.map((player) => (
               <div
                 key={player.id}
-                className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                  player.id === currentPlayerId
-                    ? 'border-dia-purple bg-gradient-to-br from-purple-50 to-purple-100 shadow-md'
-                    : 'border-gray-200 bg-white'
-                }`}
+                className={`p-3 rounded-xl border-2 transition-all duration-200 ${player.id === currentPlayerId
+                  ? 'border-dia-purple bg-gradient-to-br from-purple-50 to-purple-100 shadow-md'
+                  : 'border-gray-200 bg-white'
+                  }`}
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-xl">

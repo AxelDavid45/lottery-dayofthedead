@@ -275,6 +275,14 @@ App
 - Tablero 4x4 con cartas clickeables
 - Botón "¡Lotería!" prominente
 - Lista de jugadores con estado
+- Modal de anuncio de ganador (overlay completo que interrumpe el juego)
+
+#### Winner Modal
+- Overlay de pantalla completa con backdrop oscuro
+- Animación de entrada inmediata
+- Mensaje grande y celebratorio
+- Diferenciación visual entre ganador y otros jugadores
+- Bloqueo de interacción con el juego hasta cerrar modal
 
 ## Manejo de Errores
 
