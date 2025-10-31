@@ -15,6 +15,8 @@ function App() {
     markCell,
     claimVictory,
     clearError,
+    leaveRoom,
+    resetGame,
   } = useSocket();
 
   // Determine current view based on room state
@@ -90,6 +92,8 @@ function App() {
           currentCard={currentCard}
           onMarkCell={markCell}
           onClaim={claimVictory}
+          onLeaveRoom={leaveRoom}
+          onResetGame={resetGame}
         />
       )}
     </>

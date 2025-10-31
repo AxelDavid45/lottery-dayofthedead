@@ -62,7 +62,7 @@ async function testReconnection() {
     // Step 2: Add two more players
     log('\n📝 Step 2: Adding two more players...', 'blue');
     player2 = io(SERVER_URL);
-    
+
     await new Promise((resolve) => {
       player2.once('connect', () => {
         log(`✓ Player 2 connected: ${player2.id}`, 'green');
@@ -81,7 +81,7 @@ async function testReconnection() {
 
     player3 = io(SERVER_URL);
     let roomState;
-    
+
     await new Promise((resolve) => {
       player3.once('connect', () => {
         log(`✓ Player 3 connected: ${player3.id}`, 'green');
@@ -106,7 +106,7 @@ async function testReconnection() {
 
     // Step 4: Disconnect player 2 (non-host)
     log('\n📝 Step 4: Disconnecting Player 2 (non-host)...', 'blue');
-    
+
     const disconnectPromise = new Promise((resolve) => {
       host.once('room:state', (data) => {
         log(`✓ Host received room state update after disconnection`, 'green');
@@ -116,7 +116,7 @@ async function testReconnection() {
 
     player2.disconnect();
     log(`  Player 2 disconnected`, 'yellow');
-    
+
     roomState = await disconnectPromise;
 
     const player2State = roomState.players.find(p => p.id === player2Id);
@@ -129,7 +129,7 @@ async function testReconnection() {
 
     // Step 5: Reconnect player 2
     log('\n📝 Step 5: Reconnecting Player 2...', 'blue');
-    
+
     player2 = io(SERVER_URL);
 
     await new Promise((resolve) => {
@@ -143,25 +143,25 @@ async function testReconnection() {
       const timeout = setTimeout(() => {
         reject(new Error('Reconnection timeout - did not receive room:reconnected event'));
       }, 5000);
-      
+
       player2.once('room:reconnected', (data) => {
         clearTimeout(timeout);
         log(`✓ Player 2 successfully reconnected to room`, 'green');
         log(`  Reconnected with player ID: ${data.playerId}`, 'yellow');
         resolve(data);
       });
-      
+
       player2.once('error', (error) => {
         clearTimeout(timeout);
         reject(new Error(`Reconnection error: ${error.code} - ${error.message}`));
       });
-      
+
       player2.emit('room:reconnect', {
         roomCode: roomCode,
         playerId: player2Id,
       });
     });
-    
+
     // Verify player 2 is now connected
     const reconnectedPlayer = reconnectData.roomState.players.find(p => p.id === player2.id);
     if (reconnectedPlayer && reconnectedPlayer.isConnected) {
@@ -174,7 +174,7 @@ async function testReconnection() {
 
     // Step 6: Test host disconnection and reassignment
     log('\n📝 Step 6: Testing host disconnection and reassignment...', 'blue');
-    
+
     const hostDisconnectPromise = new Promise((resolve) => {
       player3.once('player:disconnected', (data) => {
         log(`✓ Player 3 received host disconnection notification`, 'green');
@@ -184,15 +184,15 @@ async function testReconnection() {
 
     host.disconnect();
     log(`  Host disconnected`, 'yellow');
-    
+
     await hostDisconnectPromise;
-    
+
     // Get updated room state
     roomState = await new Promise((resolve) => {
       const timeout = setTimeout(() => {
         resolve(null);
       }, 2000);
-      
+
       player3.once('room:state', (data) => {
         clearTimeout(timeout);
         resolve(data);
@@ -240,7 +240,7 @@ async function testReconnection() {
       player3.disconnect();
       player3.close();
     }
-    
+
     await sleep(1000);
     log('✓ Cleanup complete', 'green');
     process.exit(0);

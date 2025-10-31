@@ -579,6 +579,51 @@ export class RoomManager {
     return true;
   }
 
+  // Reset game to WAITING state with new boards (for "Play Again" functionality)
+  resetGame(roomCode, hostId, io) {
+    const room = this.rooms.get(roomCode);
+    
+    if (!room) {
+      throw new Error("ROOM_NOT_FOUND");
+    }
+
+    if (room.status !== "ENDED") {
+      throw new Error("GAME_NOT_ENDED");
+    }
+
+    if (room.hostId !== hostId) {
+      throw new Error("NOT_HOST");
+    }
+
+    try {
+      // Reset room state
+      room.status = "WAITING";
+      room.winnerId = null;
+      room.drawIndex = 0;
+      room.drawnCards = new Set();
+      room.deck = [];
+
+      // Generate new unique boards for all players
+      const { shuffledDeck, boards } = generateBoardsForRoom(room.players.size);
+      
+      // Assign new boards to players and reset marks
+      let boardIndex = 0;
+      for (const player of room.players.values()) {
+        player.board = boards[boardIndex];
+        player.marks = new Array(16).fill(false);
+        boardIndex++;
+      }
+
+      console.log(`Game reset in room ${roomCode} by host ${hostId}`);
+      console.log(`New boards generated for ${room.players.size} players`);
+      
+      return room;
+    } catch (error) {
+      console.error(`Failed to reset game in room ${roomCode}:`, error);
+      throw new Error("RESET_FAILED");
+    }
+  }
+
   // Get board statistics for a player
   getPlayerBoardStats(roomCode, playerId) {
     const room = this.rooms.get(roomCode);

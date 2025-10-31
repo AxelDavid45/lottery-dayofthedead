@@ -475,6 +475,148 @@ export function setupSocketHandlers(io, roomManager) {
         });
       }
     });
+
+    // Handle room leave
+    socket.on("room:leave", async (data) => {
+      try {
+        const { roomCode } = data;
+
+        if (!roomCode) {
+          socket.emit("error", {
+            code: "MISSING_DATA",
+            message: "Room code is required",
+          });
+          return;
+        }
+
+        const room = roomManager.getRoom(roomCode);
+
+        if (!room) {
+          // Even if room not found, confirm the leave to client
+          socket.emit("room:left", { roomCode });
+          console.log(`Leave request for non-existent room ${roomCode}`);
+          return;
+        }
+
+        const player = room.players.get(socket.id);
+        const playerName = player ? player.name : 'Unknown';
+
+        // Remove player from room
+        roomManager.removePlayer(roomCode, socket.id);
+
+        // Leave the socket room
+        socket.leave(roomCode);
+
+        // Emit confirmation to leaving player
+        socket.emit("room:left", { roomCode });
+
+        // Check if room still exists (might have been deleted if empty)
+        const updatedRoom = roomManager.getRoom(roomCode);
+        if (updatedRoom) {
+          // Broadcast to remaining players
+          io.to(roomCode).emit("player:left", {
+            playerId: socket.id,
+            playerName: playerName,
+          });
+
+          // Broadcast updated room state
+          io.to(roomCode).emit("room:state", serializeRoomState(updatedRoom));
+        }
+
+        console.log(`${playerName} left room ${roomCode}`);
+      } catch (error) {
+        console.error("Error leaving room:", error);
+        socket.emit("error", {
+          code: "LEAVE_FAILED",
+          message: "Failed to leave room",
+        });
+      }
+    });
+
+    // Handle game reset
+    socket.on("game:reset", async (data) => {
+      try {
+        const { roomCode } = data;
+
+        if (!roomCode) {
+          socket.emit("error", {
+            code: "MISSING_DATA",
+            message: "Room code is required",
+          });
+          return;
+        }
+
+        const room = roomManager.getRoom(roomCode);
+
+        if (!room) {
+          socket.emit("error", {
+            code: "ROOM_NOT_FOUND",
+            message: "Room not found",
+          });
+          return;
+        }
+
+        if (room.hostId !== socket.id) {
+          socket.emit("error", {
+            code: "NOT_HOST",
+            message: "Only host can reset the game",
+          });
+          return;
+        }
+
+        if (room.status !== "ENDED") {
+          socket.emit("error", {
+            code: "INVALID_STATE",
+            message: "Game must be completed to reset",
+          });
+          return;
+        }
+
+        // Reset the game
+        try {
+          const updatedRoom = roomManager.resetGame(roomCode, socket.id, io);
+
+          // Broadcast game reset to all players
+          io.to(roomCode).emit("game:reset", {
+            roomState: serializeRoomState(updatedRoom),
+          });
+
+          console.log(`Game reset in room ${roomCode} by host ${socket.id}`);
+        } catch (resetError) {
+          console.error("Error in resetGame:", resetError);
+          let errorCode = "RESET_FAILED";
+          let errorMessage = "Failed to reset game";
+
+          switch (resetError.message) {
+            case "ROOM_NOT_FOUND":
+              errorCode = "ROOM_NOT_FOUND";
+              errorMessage = "Room not found";
+              break;
+            case "NOT_HOST":
+              errorCode = "NOT_HOST";
+              errorMessage = "Only host can reset the game";
+              break;
+            case "GAME_NOT_ENDED":
+              errorCode = "INVALID_STATE";
+              errorMessage = "Game must be completed to reset";
+              break;
+            case "RESET_FAILED":
+              errorCode = "RESET_FAILED";
+              errorMessage = "Failed to generate new boards";
+              break;
+          }
+
+          socket.emit("error", { code: errorCode, message: errorMessage });
+          return;
+        }
+      } catch (error) {
+        console.error("Error resetting game:", error);
+        socket.emit("error", {
+          code: "RESET_FAILED",
+          message: "Failed to reset game",
+        });
+      }
+    });
   });
 }
 

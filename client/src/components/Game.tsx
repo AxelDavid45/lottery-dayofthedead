@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RoomStatePayload, Card } from '../../../shared/types';
 import { getCardById } from '../../../shared/types/deck';
 import { CurrentCard } from './CurrentCard';
@@ -10,6 +10,8 @@ interface GameProps {
   currentCard: Card | null;
   onMarkCell: (cellIndex: number) => void;
   onClaim: () => void;
+  onLeaveRoom: () => void;
+  onResetGame: () => void;
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -17,13 +19,40 @@ export const Game: React.FC<GameProps> = ({
   currentPlayerId,
   currentCard,
   onMarkCell,
-  onClaim
+  onClaim,
+  onLeaveRoom,
+  onResetGame
 }) => {
   const currentPlayer = roomState.players.find(p => p.id === currentPlayerId);
   const isGameEnded = roomState.status === 'ENDED';
   const winner = roomState.winnerId
     ? roomState.players.find(p => p.id === roomState.winnerId)
     : null;
+  const isHost = currentPlayer?.isHost || false;
+  const [isResetting, setIsResetting] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleResetGame = () => {
+    setIsResetting(true);
+    try {
+      onResetGame();
+    } catch (err) {
+      console.error('Error resetting game:', err);
+    } finally {
+      // Reset button state after a short delay
+      setTimeout(() => setIsResetting(false), 1000);
+    }
+  };
+
+  const handleLeaveRoom = () => {
+    setIsLeaving(true);
+    try {
+      onLeaveRoom();
+    } catch (err) {
+      console.error('Error leaving room:', err);
+    }
+    // Don't reset leaving state as we're navigating away
+  };
 
   // Debug logging
   console.log('Game component render:', {
@@ -51,7 +80,7 @@ export const Game: React.FC<GameProps> = ({
       {/* Winner Modal - Full Screen Overlay */}
       {isGameEnded && winner && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 px-4 backdrop-blur-md animate-fadeIn">
-          <div className="bg-gradient-to-br from-dia-orange via-orange-400 to-dia-purple rounded-3xl p-12 max-w-2xl w-full shadow-2xl transform animate-scaleIn">
+          <div className="bg-gradient-to-br from-dia-orange via-orange-400 to-dia-purple rounded-3xl p-8 md:p-12 max-w-2xl w-full shadow-2xl transform animate-scaleIn">
             <div className="text-center">
               <div className="text-8xl mb-6 animate-bounce">
                 {winner.id === currentPlayerId ? '🏆' : '🎊'}
@@ -66,8 +95,28 @@ export const Game: React.FC<GameProps> = ({
                     : `${winner.name} ganó la partida`}
                 </p>
               </div>
-              <div className="flex justify-center space-x-4 text-6xl animate-bounce">
+              <div className="flex justify-center space-x-4 text-6xl animate-bounce mb-8">
                 🎉 💀 🎊 🌼 🎺
+              </div>
+
+              {/* Post-Game Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+                {isHost && (
+                  <button
+                    onClick={handleResetGame}
+                    disabled={isResetting}
+                    className="w-full sm:w-auto bg-gradient-to-r from-dia-orange to-orange-500 hover:from-orange-500 hover:to-dia-orange text-white font-bold text-xl py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {isResetting ? '⏳ Reiniciando...' : '🎮 Jugar de Nuevo'}
+                  </button>
+                )}
+                <button
+                  onClick={handleLeaveRoom}
+                  disabled={isLeaving}
+                  className="w-full sm:w-auto bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 font-bold text-xl py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 font-inter disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {isLeaving ? '⏳ Saliendo...' : '🚪 Salir de la Sala'}
+                </button>
               </div>
             </div>
           </div>

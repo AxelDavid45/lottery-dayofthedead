@@ -22,6 +22,12 @@ export interface ClientToServerEvents {
   // Reclamar victoria
   'game:claim': (data: { roomCode: string }) => void;
   
+  // Salir de sala
+  'room:leave': (data: { roomCode: string }) => void;
+  
+  // Reiniciar juego (solo host)
+  'game:reset': (data: { roomCode: string }) => void;
+  
   // Desconexión
   'disconnect': () => void;
 }
@@ -48,6 +54,12 @@ export interface ServerToClientEvents {
   
   // Anuncio de ganador
   'game:winner': (data: { playerId: string; playerName: string; roomState: RoomStatePayload }) => void;
+  
+  // Sala abandonada exitosamente
+  'room:left': (data: { roomCode: string }) => void;
+  
+  // Juego reiniciado
+  'game:reset': (data: { roomState: RoomStatePayload }) => void;
   
   // Jugador se unió
   'player:joined': (data: { id: string; name: string }) => void;

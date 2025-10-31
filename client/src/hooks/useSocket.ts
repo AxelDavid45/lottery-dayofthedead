@@ -18,6 +18,7 @@ interface UseSocketReturn {
   claimVictory: () => void;
   clearError: () => void;
   leaveRoom: () => void;
+  resetGame: () => void;
 }
 
 export const useSocket = (): UseSocketReturn => {
@@ -204,6 +205,29 @@ export const useSocket = (): UseSocketReturn => {
       setError(null);
     });
 
+    socketInstance.on('room:left', (data) => {
+      console.log('Left room:', data.roomCode);
+      // Clear session data when leaving
+      localStorage.removeItem('loteria_room_code');
+      localStorage.removeItem('loteria_player_id');
+      roomCodeRef.current = '';
+      playerIdRef.current = '';
+      reconnectAttemptedRef.current = false;
+      // Navigate to home screen by clearing room state
+      setRoomState(null);
+      setCurrentCard(null);
+      setError(null);
+    });
+
+    socketInstance.on('game:reset', (data) => {
+      console.log('Game reset:', data.roomState.code);
+      // Update room state with reset data
+      setRoomState(data.roomState);
+      setCurrentCard(null);
+      setError(null);
+      // Navigation to lobby happens automatically via roomState.status === 'WAITING'
+    });
+
     // Player event handlers (informational only - room:state handles actual updates)
     socketInstance.on('player:joined', (data) => {
       console.log('🎭 Player joined:', data.name);
@@ -254,6 +278,8 @@ export const useSocket = (): UseSocketReturn => {
       socketInstance.off('game:started');
       socketInstance.off('game:card');
       socketInstance.off('game:winner');
+      socketInstance.off('room:left');
+      socketInstance.off('game:reset');
       socketInstance.off('player:joined');
       socketInstance.off('player:left');
       socketInstance.off('player:disconnected');
@@ -300,17 +326,16 @@ export const useSocket = (): UseSocketReturn => {
   }, []);
 
   const leaveRoom = useCallback(() => {
-    // Clear session data when intentionally leaving
-    localStorage.removeItem('loteria_room_code');
-    localStorage.removeItem('loteria_player_id');
-    roomCodeRef.current = '';
-    playerIdRef.current = '';
-    reconnectAttemptedRef.current = false;
-    setRoomState(null);
-    setCurrentCard(null);
-    setError(null);
-    console.log('Left room and cleared session data');
-  }, []);
+    if (!socket || !roomState) return;
+    console.log('Leaving room:', roomState.code);
+    socket.emit('room:leave', { roomCode: roomState.code });
+  }, [socket, roomState]);
+
+  const resetGame = useCallback(() => {
+    if (!socket || !roomState) return;
+    console.log('Resetting game');
+    socket.emit('game:reset', { roomCode: roomState.code });
+  }, [socket, roomState]);
 
   return {
     socket,
@@ -326,5 +351,6 @@ export const useSocket = (): UseSocketReturn => {
     claimVictory,
     clearError,
     leaveRoom,
+    resetGame,
   };
 };
