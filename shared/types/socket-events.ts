@@ -10,6 +10,9 @@ export interface ClientToServerEvents {
   // Unirse a sala existente  
   'room:join': (data: { roomCode: string; name: string }) => void;
   
+  // Reconectar a sala existente
+  'room:reconnect': (data: { roomCode: string; playerId: string }) => void;
+  
   // Iniciar partida (solo host)
   'game:start': (data: { roomCode: string }) => void;
   
@@ -25,6 +28,15 @@ export interface ClientToServerEvents {
 
 // Servidor → Cliente events
 export interface ServerToClientEvents {
+  // Sala creada exitosamente
+  'room:created': (data: { roomCode: string; roomState: RoomStatePayload }) => void;
+  
+  // Unión a sala exitosa
+  'room:joined': (data: { roomState: RoomStatePayload }) => void;
+  
+  // Reconexión exitosa
+  'room:reconnected': (data: { roomState: RoomStatePayload }) => void;
+  
   // Estado actualizado de la sala
   'room:state': (data: RoomStatePayload) => void;
   

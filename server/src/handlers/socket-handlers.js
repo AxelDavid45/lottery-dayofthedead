@@ -47,6 +47,11 @@ export function setupSocketHandlers(io, roomManager) {
           return;
         }
 
+        if (!roomManager.isValidRoomCode(roomCode)) {
+          socket.emit('error', { code: 'INVALID_ROOM_CODE', message: 'Room code must be 5-6 alphanumeric characters' });
+          return;
+        }
+
         if (name.trim().length === 0) {
           socket.emit('error', { code: 'INVALID_NAME', message: 'Name is required' });
           return;
@@ -80,6 +85,10 @@ export function setupSocketHandlers(io, roomManager) {
         let errorMessage = 'Failed to join room';
 
         switch (error.message) {
+          case 'INVALID_ROOM_CODE':
+            errorCode = 'INVALID_ROOM_CODE';
+            errorMessage = 'Room code must be 5-6 alphanumeric characters';
+            break;
           case 'ROOM_NOT_FOUND':
             errorCode = 'ROOM_NOT_FOUND';
             errorMessage = 'Room not found';
@@ -168,7 +177,18 @@ export function setupSocketHandlers(io, roomManager) {
     socket.on('room:reconnect', async (data) => {
       try {
         const { roomCode, playerId } = data;
-        const room = roomManager.getRoom(roomCode);
+        
+        if (!roomCode || !playerId) {
+          socket.emit('error', { code: 'MISSING_DATA', message: 'Room code and player ID are required' });
+          return;
+        }
+
+        if (!roomManager.isValidRoomCode(roomCode)) {
+          socket.emit('error', { code: 'INVALID_ROOM_CODE', message: 'Room code must be 5-6 alphanumeric characters' });
+          return;
+        }
+
+        const room = roomManager.getRoom(roomCode.toUpperCase());
         
         if (!room) {
           socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });

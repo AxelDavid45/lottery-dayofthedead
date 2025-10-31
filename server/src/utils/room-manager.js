@@ -15,11 +15,19 @@ export class RoomManager {
   // Generate unique room code (5-6 characters)
   generateRoomCode() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const length = Math.random() < 0.5 ? 5 : 6; // Randomly choose 5 or 6 characters
     let code = "";
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < length; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
+  }
+
+  // Validate room code format
+  isValidRoomCode(code) {
+    if (!code || typeof code !== 'string') return false;
+    const trimmedCode = code.trim().toUpperCase();
+    return /^[A-Z0-9]{5,6}$/.test(trimmedCode);
   }
 
   // Create new room
@@ -65,6 +73,10 @@ export class RoomManager {
 
   // Join existing room
   joinRoom(roomCode, playerId, playerName) {
+    if (!this.isValidRoomCode(roomCode)) {
+      throw new Error("INVALID_ROOM_CODE");
+    }
+
     const room = this.rooms.get(roomCode);
 
     if (!room) {

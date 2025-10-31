@@ -22,7 +22,7 @@
   - Configurar manejo básico de conexiones WebSocket
   - _Requisitos: 2.1, 2.4, 7.2_
 
-- [ ] 4. Implementar lógica de creación y unión a salas
+- [x] 4. Implementar lógica de creación y unión a salas
   - Desarrollar endpoint para crear nueva sala
   - Implementar validación de códigos de sala
   - Crear lógica para unirse a salas existentes
