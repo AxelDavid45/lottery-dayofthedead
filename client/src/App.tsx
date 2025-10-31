@@ -82,6 +82,7 @@ function App() {
           roomState={roomState}
           currentPlayerId={currentPlayerId}
           onStartGame={startGame}
+          onLeaveRoom={leaveRoom}
         />
       )}
 

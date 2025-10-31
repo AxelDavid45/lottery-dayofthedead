@@ -5,9 +5,10 @@ interface LobbyProps {
   roomState: RoomStatePayload;
   currentPlayerId: string;
   onStartGame: () => void;
+  onLeaveRoom: () => void;
 }
 
-export const Lobby: React.FC<LobbyProps> = ({ roomState, currentPlayerId, onStartGame }) => {
+export const Lobby: React.FC<LobbyProps> = ({ roomState, currentPlayerId, onStartGame, onLeaveRoom }) => {
   const isHost = roomState.hostId === currentPlayerId;
   const canStart = roomState.players.length >= 2;
 
@@ -87,31 +88,42 @@ export const Lobby: React.FC<LobbyProps> = ({ roomState, currentPlayerId, onStar
           </div>
         </div>
 
-        {/* Start Game Button (Host Only) */}
-        {isHost && roomState.status === 'WAITING' && (
-          <div className="text-center">
-            <button
-              onClick={onStartGame}
-              disabled={!canStart}
-              className={`w-full py-5 px-6 rounded-xl font-bold text-white text-lg transition-all duration-200 font-inter ${
-                canStart
-                  ? 'bg-dia-orange hover:bg-orange-500 shadow-lg hover:shadow-xl transform hover:scale-[1.02]'
-                  : 'bg-gray-300 cursor-not-allowed opacity-60'
-              }`}
-            >
-              {canStart
-                ? '🎮 Iniciar Partida'
-                : '⏳ Se necesitan al menos 2 jugadores'}
-            </button>
-          </div>
-        )}
+        {/* Action Buttons */}
+        {roomState.status === 'WAITING' && (
+          <div className="space-y-4">
+            {/* Start Game Button (Host Only) */}
+            {isHost && (
+              <button
+                onClick={onStartGame}
+                disabled={!canStart}
+                className={`w-full py-5 px-6 rounded-xl font-bold text-white text-lg transition-all duration-200 font-inter ${
+                  canStart
+                    ? 'bg-dia-orange hover:bg-orange-500 shadow-lg hover:shadow-xl transform hover:scale-[1.02]'
+                    : 'bg-gray-300 cursor-not-allowed opacity-60'
+                }`}
+              >
+                {canStart
+                  ? '🎮 Iniciar Partida'
+                  : '⏳ Se necesitan al menos 2 jugadores'}
+              </button>
+            )}
 
-        {/* Waiting Message (Non-Host) */}
-        {!isHost && roomState.status === 'WAITING' && (
-          <div className="text-center p-6 bg-white rounded-xl shadow-md border-2 border-gray-200">
-            <p className="text-gray-600 font-medium font-inter">
-              ⏳ Esperando a que el anfitrión inicie la partida...
-            </p>
+            {/* Waiting Message (Non-Host) */}
+            {!isHost && (
+              <div className="text-center p-6 bg-white rounded-xl shadow-md border-2 border-gray-200">
+                <p className="text-gray-600 font-medium font-inter">
+                  ⏳ Esperando a que el anfitrión inicie la partida...
+                </p>
+              </div>
+            )}
+
+            {/* Leave Room Button (All Players) */}
+            <button
+              onClick={onLeaveRoom}
+              className="w-full py-4 px-6 rounded-xl font-bold text-gray-700 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-lg transition-all duration-200 font-inter shadow-md hover:shadow-lg"
+            >
+              🚪 Salir de la Sala
+            </button>
           </div>
         )}
       </div>
