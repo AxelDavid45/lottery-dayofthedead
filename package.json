@@ -15,7 +15,23 @@
     "server:dev": "npm run dev --workspace=server",
     "server:start": "npm start --workspace=server"
   },
-  "keywords": ["loteria", "dia-muertos", "juego", "multijugador"],
-  "author": "",
-  "license": "MIT"
+  "keywords": [
+    "loteria",
+    "dia-muertos",
+    "juego",
+    "multijugador",
+    "day-of-the-dead",
+    "mexican-game",
+    "multiplayer"
+  ],
+  "author": "Lotería del Mictlán Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AxelDavid45/lottery-dayofthedead.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AxelDavid45/lottery-dayofthedead/issues"
+  },
+  "homepage": "https://github.com/AxelDavid45/lottery-dayofthedead#readme"
 }

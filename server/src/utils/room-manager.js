@@ -1,11 +1,11 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 // Room management utilities
 export class RoomManager {
   constructor() {
     this.rooms = new Map();
     this.playerRooms = new Map(); // Track which room each player is in
-    
+
     // Clean up expired rooms every 30 minutes
     setInterval(() => {
       this.cleanupExpiredRooms();
@@ -14,8 +14,8 @@ export class RoomManager {
 
   // Generate unique room code (5-6 characters)
   generateRoomCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
     for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -25,7 +25,7 @@ export class RoomManager {
   // Create new room
   createRoom(hostId, hostName) {
     const roomCode = this.generateRoomCode();
-    
+
     // Ensure unique room code
     while (this.rooms.has(roomCode)) {
       roomCode = this.generateRoomCode();
@@ -34,7 +34,7 @@ export class RoomManager {
     const roomState = {
       id: uuidv4(),
       code: roomCode,
-      status: 'WAITING',
+      status: "WAITING",
       hostId: hostId,
       deck: [],
       drawIndex: 0,
@@ -42,7 +42,7 @@ export class RoomManager {
       players: new Map(),
       winnerId: null,
       createdAt: Date.now(),
-      gameInterval: null
+      gameInterval: null,
     };
 
     // Add host as first player
@@ -52,7 +52,7 @@ export class RoomManager {
       board: [],
       marks: new Array(16).fill(false),
       isHost: true,
-      isConnected: true
+      isConnected: true,
     };
 
     roomState.players.set(hostId, hostPlayer);
@@ -66,23 +66,23 @@ export class RoomManager {
   // Join existing room
   joinRoom(roomCode, playerId, playerName) {
     const room = this.rooms.get(roomCode);
-    
+
     if (!room) {
-      throw new Error('ROOM_NOT_FOUND');
+      throw new Error("ROOM_NOT_FOUND");
     }
 
     if (room.players.size >= 8) {
-      throw new Error('ROOM_FULL');
+      throw new Error("ROOM_FULL");
     }
 
-    if (room.status !== 'WAITING') {
-      throw new Error('GAME_IN_PROGRESS');
+    if (room.status !== "WAITING") {
+      throw new Error("GAME_IN_PROGRESS");
     }
 
     // Check if name is already taken
     for (const player of room.players.values()) {
       if (player.name === playerName && player.id !== playerId) {
-        throw new Error('NAME_TAKEN');
+        throw new Error("NAME_TAKEN");
       }
     }
 
@@ -92,7 +92,7 @@ export class RoomManager {
       board: [],
       marks: new Array(16).fill(false),
       isHost: false,
-      isConnected: true
+      isConnected: true,
     };
 
     room.players.set(playerId, player);
@@ -155,12 +155,12 @@ export class RoomManager {
         if (room.gameInterval) {
           clearInterval(room.gameInterval);
         }
-        
+
         // Remove all players from tracking
         for (const playerId of room.players.keys()) {
           this.playerRooms.delete(playerId);
         }
-        
+
         this.rooms.delete(roomCode);
         console.log(`Room ${roomCode} expired and deleted`);
       }
@@ -172,7 +172,9 @@ export class RoomManager {
     return {
       totalRooms: this.rooms.size,
       totalPlayers: this.playerRooms.size,
-      activeGames: Array.from(this.rooms.values()).filter(room => room.status === 'RUNNING').length
+      activeGames: Array.from(this.rooms.values()).filter(
+        (room) => room.status === "RUNNING"
+      ).length,
     };
   }
 }
