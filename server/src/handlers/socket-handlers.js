@@ -358,7 +358,7 @@ export function setupSocketHandlers(io, roomManager) {
         // This ensures first valid claim wins (tie-breaking)
         const player = room.players.get(socket.id);
         console.log(`✅ Valid claim from ${player ? player.name : socket.id} in room ${roomCode}`);
-        
+
         roomManager.endGame(roomCode, socket.id, io);
       } catch (error) {
         console.error("Error processing claim:", error);
@@ -377,7 +377,7 @@ export function setupSocketHandlers(io, roomManager) {
       if (room) {
         const player = room.players.get(socket.id);
         const playerName = player ? player.name : 'Unknown';
-        
+
         // Remove player from room
         roomManager.removePlayer(room.code, socket.id);
 

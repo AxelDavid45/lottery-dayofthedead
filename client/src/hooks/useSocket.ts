@@ -108,7 +108,11 @@ export const useSocket = (): UseSocketReturn => {
     });
 
     socketInstance.on('room:state', (data) => {
-      console.log('Room state updated');
+      console.log('Room state updated:', {
+        players: data.players.length,
+        status: data.status,
+        code: data.code
+      });
       setRoomState(data);
     });
 
@@ -139,13 +143,13 @@ export const useSocket = (): UseSocketReturn => {
       setError(null);
     });
 
-    // Player event handlers
+    // Player event handlers (informational only - room:state handles actual updates)
     socketInstance.on('player:joined', (data) => {
-      console.log('Player joined:', data.name);
+      console.log('🎭 Player joined:', data.name);
     });
 
     socketInstance.on('player:left', (data) => {
-      console.log('Player left:', data.id);
+      console.log('👋 Player left:', data.id);
     });
 
     // Error handler
