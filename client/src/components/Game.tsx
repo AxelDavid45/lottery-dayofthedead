@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { RoomStatePayload, Card } from '../../../shared/types';
 import { getCardById } from '../../../shared/types/deck';
 import { CurrentCard } from './CurrentCard';
@@ -19,8 +19,6 @@ export const Game: React.FC<GameProps> = ({
   onMarkCell,
   onClaim
 }) => {
-  const [showClaimConfirm, setShowClaimConfirm] = useState(false);
-
   const currentPlayer = roomState.players.find(p => p.id === currentPlayerId);
   const isGameEnded = roomState.status === 'ENDED';
   const winner = roomState.winnerId
@@ -39,19 +37,6 @@ export const Game: React.FC<GameProps> = ({
     roomStatus: roomState.status,
     totalPlayers: roomState.players.length
   });
-
-  const handleClaimClick = () => {
-    setShowClaimConfirm(true);
-  };
-
-  const handleConfirmClaim = () => {
-    setShowClaimConfirm(false);
-    onClaim();
-  };
-
-  const handleCancelClaim = () => {
-    setShowClaimConfirm(false);
-  };
 
   if (!currentPlayer) {
     return (
@@ -76,8 +61,8 @@ export const Game: React.FC<GameProps> = ({
               </h2>
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl p-6 mb-6">
                 <p className="text-3xl md:text-4xl text-white font-bold font-inter">
-                  {winner.id === currentPlayerId 
-                    ? '¡Felicidades, ganaste!' 
+                  {winner.id === currentPlayerId
+                    ? '¡Felicidades, ganaste!'
                     : `${winner.name} ganó la partida`}
                 </p>
               </div>
@@ -113,39 +98,11 @@ export const Game: React.FC<GameProps> = ({
         {!isGameEnded && (
           <div className="mb-6 text-center">
             <button
-              onClick={handleClaimClick}
+              onClick={onClaim}
               className="bg-gradient-to-r from-dia-orange to-orange-500 hover:from-orange-500 hover:to-dia-orange text-white font-bold text-2xl md:text-3xl py-5 px-16 rounded-2xl shadow-2xl transition-all duration-200 transform hover:scale-110 active:scale-95 font-atkinson"
             >
               ¡LOTERÍA! 🎊
             </button>
-          </div>
-        )}
-
-        {/* Claim Confirmation Modal */}
-        {showClaimConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border-2 border-dia-purple">
-              <h3 className="text-2xl font-bold text-dia-purple mb-4 font-atkinson">
-                ¿Estás seguro?
-              </h3>
-              <p className="text-gray-700 mb-6 font-inter">
-                ¿Tienes todas las cartas marcadas correctamente?
-              </p>
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleCancelClaim}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-xl transition-all duration-200 font-inter"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleConfirmClaim}
-                  className="flex-1 bg-dia-orange hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-inter"
-                >
-                  ¡Sí, Lotería!
-                </button>
-              </div>
-            </div>
           </div>
         )}
 

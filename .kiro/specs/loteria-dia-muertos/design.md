@@ -273,7 +273,7 @@ App
 #### Game
 - Carta actual grande y centrada
 - Tablero 4x4 con cartas clickeables
-- Botón "¡Lotería!" prominente
+- Botón "¡Lotería!" prominente (sin confirmación, envío inmediato)
 - Lista de jugadores con estado
 - Modal de anuncio de ganador (overlay completo que interrumpe el juego)
 
